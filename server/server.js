@@ -22,7 +22,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Serve the frontend
-app.use(express.static(path.join(__dirname, 'public')));
+// NOTE: in this repo, "public" sits next to "server" (not inside it),
+// so we go up one level from this file's folder to find it.
+app.use(express.static(path.join(__dirname, '..', 'public')));
 
 // API routes
 app.use('/api/auth', authRoutes);
