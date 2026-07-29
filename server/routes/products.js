@@ -1,29 +1,78 @@
-const express = require("express");
+// routes/products.js
+// Mirrors DatabaseFunctions: get_all_products, get_products_by_category,
+// search_product, add_product, update_product, update_stock,
+// delete_product, get_product_by_id, get_dashboard_counts,
+// get_out_of_stock_products
+
+const express = require('express');
 const router = express.Router();
-const multer = require("multer");
-const path = require("path");
-const db = require("../dbFunctions");
+const pool = require('../db');
 
-// ----- image upload setup (replaces the Tkinter "Browse Image" + shutil.copy) -----
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, path.join(__dirname, "../../public/images")),
-  filename: (req, file, cb) => cb(null, Date.now() + "-" + file.originalname),
-});
-const upload = multer({ storage });
+// Product images are pre-uploaded to public/images via GitHub (see
+// routes/images.js), not uploaded through this API - the catalog is fixed,
+// so Add/Update just stores whichever filename the person picked from the
+// dropdown (e.g. "images/dvr_camera.jpg").
 
-// GET /api/products              -> all products
-// GET /api/products?category=X   -> filtered by category
-// GET /api/products?search=X     -> search by name/category
-router.get("/", async (req, res) => {
+// ---------- DASHBOARD COUNTS ----------
+router.get('/dashboard/counts', async (req, res) => {
   try {
-    const { category, search } = req.query;
+    const [[{ total_products }]] = await pool.query('SELECT COUNT(*) AS total_products FROM product');
+    const [[{ total_stock }]] = await pool.query('SELECT IFNULL(SUM(stock_count),0) AS total_stock FROM product');
+    const [[{ low_stock }]] = await pool.query('SELECT COUNT(*) AS low_stock FROM product WHERE stock_count <= 5 AND stock_count > 0');
+    const [[{ out_of_stock }]] = await pool.query('SELECT COUNT(*) AS out_of_stock FROM product WHERE stock_count = 0');
+
+    res.json({ total_products, total_stock, low_stock, out_of_stock });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ---------- OUT OF STOCK (must be before /:id) ----------
+router.get('/out-of-stock', async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      `SELECT id, category, product_name, \`condition\`, price, stock_count, created_by, image_path
+       FROM product WHERE stock_count = 0 ORDER BY product_name`
+    );
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ---------- SEARCH (must be before /:id) ----------
+router.get('/search', async (req, res) => {
+  const keyword = req.query.q || '';
+  try {
+    const [rows] = await pool.query(
+      `SELECT id, category, product_name, \`condition\`, price, stock_count, created_by, image_path
+       FROM product
+       WHERE category LIKE ? OR product_name LIKE ?
+       ORDER BY category, product_name`,
+      [`%${keyword}%`, `%${keyword}%`]
+    );
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ---------- ALL PRODUCTS / BY CATEGORY ----------
+router.get('/', async (req, res) => {
+  const { category } = req.query;
+  try {
     let rows;
-    if (search) {
-      rows = await db.searchProducts(search);
-    } else if (category && category !== "All Products") {
-      rows = await db.getProductsByCategory(category);
+    if (category && category !== 'All Products') {
+      [rows] = await pool.query(
+        `SELECT id, category, product_name, \`condition\`, price, stock_count, created_by, image_path
+         FROM product WHERE category = ? ORDER BY product_name`,
+        [category]
+      );
     } else {
-      rows = await db.getAllProducts();
+      [rows] = await pool.query(
+        `SELECT id, category, product_name, \`condition\`, price, stock_count, created_by, image_path
+         FROM product ORDER BY category, product_name`
+      );
     }
     res.json(rows);
   } catch (err) {
@@ -31,101 +80,72 @@ router.get("/", async (req, res) => {
   }
 });
 
-// GET /api/products/out-of-stock
-router.get("/out-of-stock", async (req, res) => {
+// ---------- GET ONE PRODUCT ----------
+router.get('/:id', async (req, res) => {
   try {
-    res.json(await db.getOutOfStockProducts());
+    const [rows] = await pool.query('SELECT * FROM product WHERE id = ?', [req.params.id]);
+    if (rows.length === 0) return res.status(404).json({ error: 'Product not found.' });
+    res.json(rows[0]);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// GET /api/products/dashboard-counts
-router.get("/dashboard-counts", async (req, res) => {
+// ---------- ADD PRODUCT ----------
+router.post('/', async (req, res) => {
+  const { category, product_name, condition, price, stock_count, created_by, image_path: rawImagePath } = req.body;
+
+  if (!product_name || !product_name.trim()) {
+    return res.status(400).json({ error: 'Please enter Product Name.' });
+  }
+  if (price === undefined || price === '') {
+    return res.status(400).json({ error: 'Please enter Product Price.' });
+  }
+  if (stock_count === undefined || stock_count === '') {
+    return res.status(400).json({ error: 'Please enter Stock Quantity.' });
+  }
+
+  const image_path = rawImagePath || '';
+
   try {
-    res.json(await db.getDashboardCounts());
+    const [result] = await pool.query(
+      `INSERT INTO product (category, product_name, \`condition\`, price, stock_count, created_by, image_path)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [category, product_name.trim(), condition, parseFloat(price), parseInt(stock_count), created_by || 'Admin', image_path]
+    );
+
+    await pool.query(
+      `INSERT INTO activity_log (username, activity) VALUES (?, ?)`,
+      [created_by || 'Admin', `Added Product : ${product_name.trim()}`]
+    );
+
+    res.status(201).json({ id: result.insertId });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// GET /api/products/:id
-router.get("/:id", async (req, res) => {
-  try {
-    const row = await db.getProductById(req.params.id);
-    if (!row) return res.status(404).json({ error: "Product not found." });
-    res.json(row);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+// ---------- UPDATE PRODUCT ----------
+router.put('/:id', async (req, res) => {
+  const { category, product_name, condition, price, stock_count, created_by, image_path: rawImagePath } = req.body;
+
+  if (!product_name || !product_name.trim()) {
+    return res.status(400).json({ error: 'Please enter Product Name.' });
   }
-});
 
-// POST /api/products   (multipart/form-data, field "image" optional)
-router.post("/", upload.single("image"), async (req, res) => {
+  const image_path = rawImagePath || '';
+
   try {
-    const { category, product_name, condition, price, stock_count, created_by } = req.body;
+    await pool.query(
+      `UPDATE product SET category=?, product_name=?, \`condition\`=?, price=?, stock_count=?, created_by=?, image_path=?
+       WHERE id=?`,
+      [category, product_name.trim(), condition, parseFloat(price), parseInt(stock_count), created_by, image_path, req.params.id]
+    );
 
-    if (!product_name || !product_name.trim()) {
-      return res.status(400).json({ error: "Please enter Product Name." });
-    }
-    if (price === undefined || price === "") {
-      return res.status(400).json({ error: "Please enter Product Price." });
-    }
-    if (stock_count === undefined || stock_count === "") {
-      return res.status(400).json({ error: "Please enter Stock Quantity." });
-    }
-
-    const image_path = req.file ? `images/${req.file.filename}` : "";
-
-    const id = await db.addProduct({
-      category,
-      product_name: product_name.trim(),
-      condition,
-      price: parseFloat(price),
-      stock_count: parseInt(stock_count, 10),
-      created_by: created_by || "Admin",
-      image_path,
-    });
-
-    await db.logActivity(created_by || "Admin", `Added Product : ${product_name.trim()}`);
-
-    res.status(201).json({ id });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// PUT /api/products/:id
-router.put("/:id", upload.single("image"), async (req, res) => {
-  try {
-    const { category, product_name, condition, price, stock_count, created_by } = req.body;
-
-    if (!product_name || !product_name.trim()) {
-      return res.status(400).json({ error: "Please enter Product Name." });
-    }
-    if (price === undefined || price === "") {
-      return res.status(400).json({ error: "Please enter Product Price." });
-    }
-    if (stock_count === undefined || stock_count === "") {
-      return res.status(400).json({ error: "Please enter Stock Quantity." });
-    }
-
-    const existing = await db.getProductById(req.params.id);
-    if (!existing) return res.status(404).json({ error: "Product not found." });
-
-    const image_path = req.file ? `images/${req.file.filename}` : req.body.existing_image_path || "";
-
-    await db.updateProduct(req.params.id, {
-      category,
-      product_name: product_name.trim(),
-      condition,
-      price: parseFloat(price),
-      stock_count: parseInt(stock_count, 10),
-      created_by: created_by || "Admin",
-      image_path,
-    });
-
-    await db.logActivity("Admin", `Updated Product : ${product_name.trim()}`);
+    await pool.query(
+      `INSERT INTO activity_log (username, activity) VALUES (?, ?)`,
+      ['Admin', `Updated Product : ${product_name.trim()}`]
+    );
 
     res.json({ success: true });
   } catch (err) {
@@ -133,35 +153,36 @@ router.put("/:id", upload.single("image"), async (req, res) => {
   }
 });
 
-// PATCH /api/products/:id/stock   { operation: "IN"|"OUT", quantity, username }
-router.patch("/:id/stock", async (req, res) => {
+// ---------- STOCK IN / OUT ----------
+router.put('/:id/stock', async (req, res) => {
+  const { operation, quantity, username } = req.body;
+  const qty = parseInt(quantity);
+
+  if (!qty || qty <= 0) {
+    return res.status(400).json({ error: 'Quantity must be greater than zero.' });
+  }
+
   try {
-    const { operation, quantity, username } = req.body;
-    const qty = parseInt(quantity, 10);
+    const [rows] = await pool.query('SELECT product_name, stock_count FROM product WHERE id = ?', [req.params.id]);
+    if (rows.length === 0) return res.status(404).json({ error: 'Product not found.' });
 
-    if (!qty || qty <= 0) {
-      return res.status(400).json({ error: "Quantity must be greater than zero." });
-    }
-
-    const product = await db.getProductById(req.params.id);
-    if (!product) return res.status(404).json({ error: "Product not found." });
-
-    const current = product.stock_count;
+    const current = rows[0].stock_count;
     let newStock;
 
-    if (operation === "IN") {
+    if (operation === 'IN') {
       newStock = current + qty;
     } else {
       if (qty > current) {
-        return res.status(400).json({ error: "Not enough stock available." });
+        return res.status(400).json({ error: 'Not enough stock available.' });
       }
       newStock = current - qty;
     }
 
-    await db.updateStock(req.params.id, newStock);
-    await db.logActivity(
-      username || "Admin",
-      `Stock ${operation} : ${product.product_name} (${current} \u2192 ${newStock})`
+    await pool.query('UPDATE product SET stock_count = ? WHERE id = ?', [newStock, req.params.id]);
+
+    await pool.query(
+      `INSERT INTO activity_log (username, activity) VALUES (?, ?)`,
+      [username || 'Admin', `Stock ${operation} : ${rows[0].product_name} (${current} \u2192 ${newStock})`]
     );
 
     res.json({ success: true, new_stock: newStock });
@@ -170,16 +191,18 @@ router.patch("/:id/stock", async (req, res) => {
   }
 });
 
-// DELETE /api/products/:id
-router.delete("/:id", async (req, res) => {
+// ---------- DELETE PRODUCT ----------
+router.delete('/:id', async (req, res) => {
   try {
-    const product = await db.getProductById(req.params.id);
-    const affected = await db.deleteProduct(req.params.id);
-    if (affected === 0) return res.status(404).json({ error: "Product not found." });
+    const [rows] = await pool.query('SELECT product_name FROM product WHERE id = ?', [req.params.id]);
+    if (rows.length === 0) return res.status(404).json({ error: 'Product not found.' });
 
-    if (product) {
-      await db.logActivity("Admin", `Deleted Product : ${product.product_name}`);
-    }
+    await pool.query('DELETE FROM product WHERE id = ?', [req.params.id]);
+
+    await pool.query(
+      `INSERT INTO activity_log (username, activity) VALUES (?, ?)`,
+      ['Admin', `Deleted Product : ${rows[0].product_name}`]
+    );
 
     res.json({ success: true });
   } catch (err) {
