@@ -1,60 +1,43 @@
-// login.js - equivalent of the login() function in login.py
+// login.js - mirrors login.py's login() function
 
-const form = document.getElementById("loginForm");
-const usernameEl = document.getElementById("username");
-const passwordEl = document.getElementById("password");
-const errorEl = document.getElementById("loginError");
-const showPwEl = document.getElementById("showPassword");
-const loginBtn = document.getElementById("loginBtn");
-
-showPwEl.addEventListener("change", () => {
-  passwordEl.type = showPwEl.checked ? "text" : "password";
-});
-
-function showError(message) {
-  errorEl.textContent = message;
-  errorEl.classList.add("show");
-}
-
-function clearError() {
-  errorEl.textContent = "";
-  errorEl.classList.remove("show");
-}
-
-form.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  clearError();
-
-  const username = usernameEl.value.trim();
-  const password = passwordEl.value.trim();
-
-  if (!username) {
-    showError("Please enter username.");
-    usernameEl.focus();
-    return;
-  }
-  if (!password) {
-    showError("Please enter password.");
-    passwordEl.focus();
+document.addEventListener('DOMContentLoaded', () => {
+  // If already logged in, skip straight to dashboard
+  if (sessionStorage.getItem('dc_user')) {
+    window.location.href = 'dashboard.html';
     return;
   }
 
-  loginBtn.disabled = true;
-  loginBtn.textContent = "Logging in...";
+  const form = document.getElementById('loginForm');
+  const errorText = document.getElementById('loginError');
+  const showPassword = document.getElementById('showPassword');
+  const passwordField = document.getElementById('password');
 
-  try {
-    const user = await Api.login(username, password);
-    Session.set(user);
-    window.location.href = "dashboard.html";
-  } catch (err) {
-    showError(err.message || "Invalid Username or Password.");
-  } finally {
-    loginBtn.disabled = false;
-    loginBtn.textContent = "LOGIN";
-  }
+  showPassword.addEventListener('change', () => {
+    passwordField.type = showPassword.checked ? 'text' : 'password';
+  });
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    errorText.textContent = '';
+
+    const username = document.getElementById('username').value.trim();
+    const password = passwordField.value.trim();
+
+    if (!username) {
+      errorText.textContent = 'Please enter username.';
+      return;
+    }
+    if (!password) {
+      errorText.textContent = 'Please enter password.';
+      return;
+    }
+
+    try {
+      const user = await API.post('/auth/login', { username, password });
+      sessionStorage.setItem('dc_user', JSON.stringify(user));
+      window.location.href = 'dashboard.html';
+    } catch (err) {
+      errorText.textContent = err.message;
+    }
+  });
 });
-
-// If already logged in this session, skip straight to dashboard
-if (Session.get()) {
-  window.location.href = "dashboard.html";
-}
