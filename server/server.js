@@ -1,29 +1,36 @@
-require("dotenv").config();
-const express = require("express");
-const cors = require("cors");
-const path = require("path");
-const fs = require("fs");
+// server.js
+// DC STOCK MANAGER - Web/Mobile Version
+// Serves the frontend (public/) and the JSON API that replicates
+// database_functions.py's DatabaseFunctions class.
+
+require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const path = require('path');
+
+const authRoutes = require('./routes/auth');
+const productRoutes = require('./routes/products');
+const userRoutes = require('./routes/users');
+const activityRoutes = require('./routes/activity');
+const imageRoutes = require('./routes/images');
 
 const app = express();
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Make sure the images upload folder exists
-const imagesDir = path.join(__dirname, "../public/images");
-if (!fs.existsSync(imagesDir)) fs.mkdirSync(imagesDir, { recursive: true });
+// Serve the frontend
+app.use(express.static(path.join(__dirname, 'public')));
 
-// Serve the frontend (public/) as static files, and uploaded images with it
-app.use(express.static(path.join(__dirname, "../public")));
-
-// ----- API routes -----
-app.use("/api/auth", require("./routes/auth"));
-app.use("/api/products", require("./routes/products"));
-app.use("/api/users", require("./routes/users"));
-app.use("/api/activity", require("./routes/activity"));
+// API routes
+app.use('/api/auth', authRoutes);
+app.use('/api/products', productRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/activity', activityRoutes);
+app.use('/api/images', imageRoutes);
 
 app.listen(PORT, () => {
-  console.log(`🚀 DC Stock Manager server running at http://localhost:${PORT}`);
+  console.log(`DC STOCK MANAGER running at http://localhost:${PORT}`);
 });
