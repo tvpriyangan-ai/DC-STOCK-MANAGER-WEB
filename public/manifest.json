@@ -1,0 +1,13 @@
+{
+  "name": "DC Stock Manager",
+  "short_name": "DC Stock",
+  "description": "Inventory Management System - DC Electricals",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#1E1E1E",
+  "theme_color": "#1E1E1E",
+  "icons": [
+    { "src": "logo.jpeg", "sizes": "192x192", "type": "image/jpeg" },
+    { "src": "logo.jpeg", "sizes": "512x512", "type": "image/jpeg" }
+  ]
+}

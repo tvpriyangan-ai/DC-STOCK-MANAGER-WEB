@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>DC Stock Manager</title>
+<meta name="theme-color" content="#1E1E1E">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="logo.jpeg">
+<link rel="icon" href="logo.jpeg">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="login-screen">
+  <form class="login-card" id="loginForm" autocomplete="off">
+    <h1>DC STOCK MANAGER</h1>
+    <p class="subtitle">Inventory Management System</p>
+
+    <img src="logo.jpeg" alt="DC Electricals logo" class="login-logo">
+
+    <label class="field-label" for="username">Username</label>
+    <input class="text-input" type="text" id="username" name="username" autocomplete="username" required>
+
+    <label class="field-label" for="password">Password</label>
+    <input class="text-input" type="password" id="password" name="password" autocomplete="current-password" required>
+
+    <label class="show-pw-toggle">
+      <input type="checkbox" id="showPassword">
+      Show Password
+    </label>
+
+    <div class="login-error" id="loginError"></div>
+
+    <div style="margin-top:16px; display:flex; flex-direction:column; gap:10px;">
+      <button type="submit" class="btn btn-green" id="loginBtn">LOGIN</button>
+    </div>
+
+    <p class="login-footer">© TVP CREATIONS 2026</p>
+  </form>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/login.js"></script>
+</body>
+</html>
