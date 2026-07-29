@@ -333,6 +333,12 @@ button { font-family: inherit; }
   gap: 8px;
   margin-bottom: 14px;
   align-items: center;
+  position: sticky;
+  top: 60px;
+  z-index: 20;
+  background: var(--bg);
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
 }
 
 .search-input {

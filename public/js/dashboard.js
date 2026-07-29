@@ -482,7 +482,7 @@ function initUsersModal() {
   document.getElementById('userBlockBtn').addEventListener('click', async () => {
     if (!selectedUserId) return alert('Please select a user.');
     try {
-      await API.put(`/users/${selectedUserId}/status`, {});
+      await API.patch(`/users/${selectedUserId}/toggle-status`, {});
       await loadUsers();
     } catch (err) {
       alert(err.message);

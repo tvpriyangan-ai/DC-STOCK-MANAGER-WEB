@@ -32,6 +32,17 @@ const API = {
     return data;
   },
 
+  async patch(path, body, isFormData = false) {
+    const res = await fetch(this.base + path, {
+      method: 'PATCH',
+      headers: isFormData ? {} : { 'Content-Type': 'application/json' },
+      body: isFormData ? body : JSON.stringify(body)
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || 'Request failed.');
+    return data;
+  },
+
   async delete(path) {
     const res = await fetch(this.base + path, { method: 'DELETE' });
     const data = await res.json().catch(() => ({}));
