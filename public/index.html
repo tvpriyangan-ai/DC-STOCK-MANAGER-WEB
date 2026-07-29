@@ -2,45 +2,43 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
-<title>DC Stock Manager</title>
-<meta name="theme-color" content="#1E1E1E">
-<link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="logo.jpeg">
-<link rel="icon" href="logo.jpeg">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>DC Stock Manager - Login</title>
 <link rel="stylesheet" href="css/style.css">
 </head>
-<body>
+<body class="login-body">
 
-<div class="login-screen">
-  <form class="login-card" id="loginForm" autocomplete="off">
-    <h1>DC STOCK MANAGER</h1>
-    <p class="subtitle">Inventory Management System</p>
+  <div class="login-card">
 
-    <img src="logo.jpeg" alt="DC Electricals logo" class="login-logo">
+    <h1 class="login-title">DC STOCK MANAGER</h1>
+    <p class="login-subtitle">Inventory Management System</p>
 
-    <label class="field-label" for="username">Username</label>
-    <input class="text-input" type="text" id="username" name="username" autocomplete="username" required>
-
-    <label class="field-label" for="password">Password</label>
-    <input class="text-input" type="password" id="password" name="password" autocomplete="current-password" required>
-
-    <label class="show-pw-toggle">
-      <input type="checkbox" id="showPassword">
-      Show Password
-    </label>
-
-    <div class="login-error" id="loginError"></div>
-
-    <div style="margin-top:16px; display:flex; flex-direction:column; gap:10px;">
-      <button type="submit" class="btn btn-green" id="loginBtn">LOGIN</button>
+    <div class="login-logo">
+      <img src="images/logo_v2.jpeg" alt="DC Electricals" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+      <div class="logo-fallback" style="display:none;">DC</div>
     </div>
 
-    <p class="login-footer">© TVP CREATIONS 2026</p>
-  </form>
-</div>
+    <form id="loginForm" autocomplete="off">
+      <label for="username">Username</label>
+      <input type="text" id="username" name="username" autocomplete="username" required>
 
-<script src="js/api.js"></script>
-<script src="js/login.js"></script>
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password" autocomplete="current-password" required>
+
+      <label class="checkbox-row">
+        <input type="checkbox" id="showPassword">
+        Show Password
+      </label>
+
+      <p id="loginError" class="error-text"></p>
+
+      <button type="submit" class="btn btn-green btn-block">LOGIN</button>
+    </form>
+
+    <p class="footer-text">© TVP CREATIONS 2026</p>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/login.js"></script>
 </body>
 </html>
