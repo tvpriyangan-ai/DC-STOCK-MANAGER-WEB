@@ -25,7 +25,7 @@ let selectedUserId = null;
 // server (see server/middleware/requireAdmin.js); this just keeps the
 // buttons regular staff can't use out of their way.
 function applyRolePermissions() {
-  const isAdmin = currentUser.role === 'Admin';
+  const isAdmin = (currentUser.role || '').trim().toLowerCase() === 'admin';
   ['addBtn', 'updateBtn', 'deleteBtn', 'usersBtn'].forEach((id) => {
     document.getElementById(id).style.display = isAdmin ? '' : 'none';
   });

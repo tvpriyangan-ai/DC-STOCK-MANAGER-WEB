@@ -15,10 +15,10 @@ module.exports = async function requireAdmin(req, res, next) {
 
   try {
     const user = await db.getUserByUsername(username);
-    if (!user || user.status !== 'Active') {
+    if (!user || (user.status || '').trim().toLowerCase() !== 'active') {
       return res.status(401).json({ error: 'Login required.' });
     }
-    if (user.role !== 'Admin') {
+    if ((user.role || '').trim().toLowerCase() !== 'admin') {
       return res.status(403).json({ error: 'Admin access required.' });
     }
     next();
