@@ -146,6 +146,14 @@ const DatabaseFunctions = {
     return rows[0] || null;
   },
 
+  async getUserByUsername(username) {
+    const [rows] = await pool.query(
+      `SELECT id, full_name, username, role, status FROM users WHERE username=?`,
+      [username]
+    );
+    return rows[0] || null;
+  },
+
   async addUser({ full_name, username, password, role, status }) {
     const [result] = await pool.query(
       `

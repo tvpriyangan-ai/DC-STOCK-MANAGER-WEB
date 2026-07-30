@@ -20,7 +20,19 @@ let selectedUserId = null;
   currentUser = JSON.parse(stored);
 })();
 
+// Only Admin can add/update/delete products or manage users - everyone
+// else can view products and adjust stock only. Enforced again on the
+// server (see server/middleware/requireAdmin.js); this just keeps the
+// buttons regular staff can't use out of their way.
+function applyRolePermissions() {
+  const isAdmin = currentUser.role === 'Admin';
+  ['addBtn', 'updateBtn', 'deleteBtn', 'usersBtn'].forEach((id) => {
+    document.getElementById(id).style.display = isAdmin ? '' : 'none';
+  });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+  applyRolePermissions();
   initHeader();
   initSidebar();
   initToolbar();

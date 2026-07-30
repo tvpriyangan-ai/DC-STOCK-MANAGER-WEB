@@ -1,6 +1,10 @@
 const express = require("express");
 const router = express.Router();
 const db = require("../dbFunctions");
+const requireAdmin = require("../middleware/requireAdmin");
+
+// Every route in this file is Admin-only - only Admin manages users.
+router.use(requireAdmin);
 
 // GET /api/users
 router.get("/", async (req, res) => {

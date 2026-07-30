@@ -7,6 +7,7 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../db');
+const requireAdmin = require('../middleware/requireAdmin');
 
 // Product images are pre-uploaded to public/images via GitHub (see
 // routes/images.js), not uploaded through this API - the catalog is fixed,
@@ -91,8 +92,8 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// ---------- ADD PRODUCT ----------
-router.post('/', async (req, res) => {
+// ---------- ADD PRODUCT (Admin only) ----------
+router.post('/', requireAdmin, async (req, res) => {
   const { category, product_name, condition, price, stock_count, created_by, image_path: rawImagePath } = req.body;
 
   if (!product_name || !product_name.trim()) {
@@ -125,8 +126,8 @@ router.post('/', async (req, res) => {
   }
 });
 
-// ---------- UPDATE PRODUCT ----------
-router.put('/:id', async (req, res) => {
+// ---------- UPDATE PRODUCT (Admin only) ----------
+router.put('/:id', requireAdmin, async (req, res) => {
   const { category, product_name, condition, price, stock_count, created_by, image_path: rawImagePath } = req.body;
 
   if (!product_name || !product_name.trim()) {
@@ -191,8 +192,8 @@ router.put('/:id/stock', async (req, res) => {
   }
 });
 
-// ---------- DELETE PRODUCT ----------
-router.delete('/:id', async (req, res) => {
+// ---------- DELETE PRODUCT (Admin only) ----------
+router.delete('/:id', requireAdmin, async (req, res) => {
   try {
     const [rows] = await pool.query('SELECT product_name FROM product WHERE id = ?', [req.params.id]);
     if (rows.length === 0) return res.status(404).json({ error: 'Product not found.' });
