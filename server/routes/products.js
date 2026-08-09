@@ -42,15 +42,25 @@ router.get('/out-of-stock', async (req, res) => {
 });
 
 // ---------- SEARCH (must be before /:id) ----------
+// Matches each word of the query separately (AND'd together) rather than
+// the whole phrase as one substring, so word order / which column a word
+// lands in (e.g. "dvr" in the name vs "CCTV" in the category) doesn't
+// stop a match - "cctv camera" now finds a camera whose category is CCTV
+// even though "cctv camera" never appears as a contiguous substring.
 router.get('/search', async (req, res) => {
-  const keyword = req.query.q || '';
+  const words = (req.query.q || '').trim().split(/\s+/).filter(Boolean);
+  if (words.length === 0) return res.json([]);
+
+  const whereClause = words.map(() => '(category LIKE ? OR product_name LIKE ?)').join(' AND ');
+  const params = words.flatMap((w) => [`%${w}%`, `%${w}%`]);
+
   try {
     const [rows] = await pool.query(
       `SELECT id, category, product_name, \`condition\`, price, stock_count, created_by, image_path
        FROM product
-       WHERE category LIKE ? OR product_name LIKE ?
+       WHERE ${whereClause}
        ORDER BY category, product_name`,
-      [`%${keyword}%`, `%${keyword}%`]
+      params
     );
     res.json(rows);
   } catch (err) {

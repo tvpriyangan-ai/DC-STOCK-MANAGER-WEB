@@ -577,11 +577,12 @@ button { font-family: inherit; }
   background: #fff;
   display: flex;
   justify-content: center;
-  padding: 6px 20px;
+  padding: 14px 20px;
 }
 
 .invoice-logo {
-  max-width: 480px;
+  max-width: 420px;
+  max-height: 110px;
   width: 100%;
   height: auto;
   object-fit: contain;
@@ -821,11 +822,23 @@ button { font-family: inherit; }
 
 .invoice-summary-row {
   display: flex;
-  justify-content: flex-end;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
   margin-top: 18px;
 }
 
+.invoice-summary-art {
+  flex: 1;
+  min-width: 0;
+  max-width: 240px;
+  max-height: 200px;
+  object-fit: contain;
+}
+
 .invoice-summary-box {
+  flex-shrink: 0;
   width: 100%;
   max-width: 300px;
   background: #f7f9fa;
