@@ -42,6 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initUsersModal();
   initUserFormModal();
   initCustomerBillModal();
+  initInvoiceModal();
 
   loadDashboardCounts();
   loadProducts();
@@ -665,4 +666,271 @@ async function searchCustomerBills(keyword) {
   } catch (err) {
     total.textContent = 'Search error: ' + err.message;
   }
+}
+
+// ================= INVOICE MODAL =================
+
+let invoiceItems = [];
+let invoiceRowCounter = 0;
+let invoiceSaved = false;
+
+function formatRs(n) {
+  return 'Rs ' + Number(n || 0).toFixed(2);
+}
+
+function initInvoiceModal() {
+  document.getElementById('invoiceBtn').addEventListener('click', openInvoiceModal);
+  document.getElementById('invoiceCloseBtn').addEventListener('click', () => {
+    document.getElementById('invoiceModal').classList.remove('open');
+  });
+
+  ['invCustomerName', 'invCustomerMobile', 'invCustomerAddress', 'invDate'].forEach((id) => {
+    document.getElementById(id).addEventListener('input', checkInvoiceUnlock);
+  });
+
+  document.getElementById('invDiscount').addEventListener('input', recalcInvoiceTotals);
+  document.getElementById('invAdvance').addEventListener('input', recalcInvoiceTotals);
+
+  const search = document.getElementById('invStockSearch');
+  let timer;
+  search.addEventListener('input', () => {
+    clearTimeout(timer);
+    timer = setTimeout(() => searchInvoiceStock(search.value.trim()), 250);
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.invoice-search-wrap')) {
+      document.getElementById('invStockResults').innerHTML = '';
+    }
+  });
+
+  document.getElementById('invAddBlankBtn').addEventListener('click', () => addInvoiceItem(null));
+
+  document.getElementById('invClearBtn').addEventListener('click', () => {
+    if (invoiceItems.length > 0 && !confirm('Clear this invoice? Everything entered will be lost.')) return;
+    resetInvoiceForm();
+  });
+
+  document.getElementById('invSaveBtn').addEventListener('click', saveInvoice);
+  document.getElementById('invPrintBtn').addEventListener('click', () => window.print());
+  document.getElementById('invNewBtn').addEventListener('click', resetInvoiceForm);
+
+  document.getElementById('invoiceItemsBody').addEventListener('input', (e) => {
+    const tr = e.target.closest('tr');
+    if (!tr) return;
+    const rowId = Number(tr.dataset.rowId);
+    const item = invoiceItems.find((it) => it.rowId === rowId);
+    if (!item) return;
+
+    const field = e.target.dataset.field;
+    if (field === 'item_name' || field === 'warranty') {
+      item[field] = e.target.value;
+    } else if (field === 'quantity') {
+      item.quantity = e.target.value;
+    } else if (field === 'unit_price') {
+      item.unit_price = e.target.value;
+    }
+
+    if (field === 'quantity' || field === 'unit_price') {
+      tr.querySelector('.invoice-row-total').textContent = formatRs(
+        (Number(item.quantity) || 0) * (Number(item.unit_price) || 0)
+      );
+      recalcInvoiceTotals();
+    }
+  });
+
+  document.getElementById('invoiceItemsBody').addEventListener('click', (e) => {
+    const btn = e.target.closest('.invoice-row-remove');
+    if (!btn) return;
+    removeInvoiceItem(Number(btn.closest('tr').dataset.rowId));
+  });
+}
+
+function openInvoiceModal() {
+  resetInvoiceForm();
+  document.getElementById('invoiceModal').classList.add('open');
+}
+
+function resetInvoiceForm() {
+  invoiceSaved = false;
+  invoiceItems = [];
+  invoiceRowCounter = 0;
+
+  document.getElementById('invCustomerName').value = '';
+  document.getElementById('invCustomerMobile').value = '';
+  document.getElementById('invCustomerAddress').value = '';
+  document.getElementById('invDate').value = new Date().toISOString().slice(0, 10);
+  document.getElementById('invDiscount').value = 0;
+  document.getElementById('invAdvance').value = 0;
+  document.getElementById('invStockSearch').value = '';
+  document.getElementById('invStockResults').innerHTML = '';
+  document.getElementById('invoiceFormError').textContent = '';
+  document.getElementById('invoiceNumberBar').style.display = 'none';
+
+  [
+    'invCustomerName', 'invCustomerMobile', 'invCustomerAddress', 'invDate',
+    'invDiscount', 'invAdvance'
+  ].forEach((id) => { document.getElementById(id).disabled = false; });
+
+  document.getElementById('invClearBtn').style.display = '';
+  document.getElementById('invSaveBtn').style.display = '';
+  document.getElementById('invPrintBtn').style.display = 'none';
+  document.getElementById('invNewBtn').style.display = 'none';
+
+  renderInvoiceItems();
+  recalcInvoiceTotals();
+  checkInvoiceUnlock();
+}
+
+function checkInvoiceUnlock() {
+  const unlocked =
+    document.getElementById('invCustomerName').value.trim() &&
+    document.getElementById('invCustomerMobile').value.trim() &&
+    document.getElementById('invCustomerAddress').value.trim() &&
+    document.getElementById('invDate').value;
+
+  document.getElementById('invoiceLockNotice').style.display = unlocked || invoiceSaved ? 'none' : 'block';
+  document.getElementById('invStockSearch').disabled = !unlocked || invoiceSaved;
+  document.getElementById('invAddBlankBtn').disabled = !unlocked || invoiceSaved;
+  document.getElementById('invSaveBtn').disabled = !unlocked || invoiceItems.length === 0 || invoiceSaved;
+}
+
+function renderInvoiceItems() {
+  const tbody = document.getElementById('invoiceItemsBody');
+  const empty = document.getElementById('invoiceItemsEmpty');
+
+  if (invoiceItems.length === 0) {
+    tbody.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  tbody.innerHTML = invoiceItems.map((it) => `
+    <tr data-row-id="${it.rowId}">
+      <td><input type="number" min="1" data-field="quantity" value="${it.quantity}" ${invoiceSaved ? 'disabled' : ''}></td>
+      <td><input type="text" data-field="item_name" value="${escapeHtml(it.item_name)}" placeholder="Item name" ${invoiceSaved ? 'disabled' : ''}></td>
+      <td><input type="text" data-field="warranty" value="${escapeHtml(it.warranty)}" placeholder="e.g. 1 Year" ${invoiceSaved ? 'disabled' : ''}></td>
+      <td><input type="number" min="0" step="0.01" data-field="unit_price" value="${it.unit_price}" ${invoiceSaved ? 'disabled' : ''}></td>
+      <td class="invoice-row-total">${formatRs((Number(it.quantity) || 0) * (Number(it.unit_price) || 0))}</td>
+      <td class="no-print">${invoiceSaved ? '' : '<button type="button" class="invoice-row-remove" title="Remove">✕</button>'}</td>
+    </tr>
+  `).join('');
+}
+
+function recalcInvoiceTotals() {
+  const subtotal = invoiceItems.reduce((sum, it) => sum + (Number(it.quantity) || 0) * (Number(it.unit_price) || 0), 0);
+  const discount = Number(document.getElementById('invDiscount').value) || 0;
+  const advance = Number(document.getElementById('invAdvance').value) || 0;
+  const finalAmount = Math.max(subtotal - discount, 0);
+  const balanceDue = finalAmount - advance;
+
+  document.getElementById('invSubtotal').textContent = formatRs(subtotal);
+  document.getElementById('invFinalAmount').textContent = formatRs(finalAmount);
+  document.getElementById('invBalanceDue').textContent = formatRs(balanceDue);
+
+  checkInvoiceUnlock();
+}
+
+function addInvoiceItem(product) {
+  invoiceRowCounter += 1;
+  invoiceItems.push({
+    rowId: invoiceRowCounter,
+    product_id: product ? product.id : null,
+    item_name: product ? product.product_name : '',
+    warranty: '',
+    quantity: 1,
+    unit_price: product ? Number(product.price) : 0
+  });
+
+  document.getElementById('invStockSearch').value = '';
+  document.getElementById('invStockResults').innerHTML = '';
+
+  renderInvoiceItems();
+  recalcInvoiceTotals();
+}
+
+function removeInvoiceItem(rowId) {
+  invoiceItems = invoiceItems.filter((it) => it.rowId !== rowId);
+  renderInvoiceItems();
+  recalcInvoiceTotals();
+}
+
+async function searchInvoiceStock(keyword) {
+  const results = document.getElementById('invStockResults');
+  if (!keyword) {
+    results.innerHTML = '';
+    return;
+  }
+
+  try {
+    const rows = await API.get('/products/search?q=' + encodeURIComponent(keyword));
+    if (rows.length === 0) {
+      results.innerHTML = '<div class="invoice-search-empty">No matching products.</div>';
+      return;
+    }
+    results.innerHTML = rows.slice(0, 8).map((p, i) => `
+      <div class="invoice-search-item" data-index="${i}">
+        <span>${escapeHtml(p.product_name)}</span>
+        <span class="invoice-search-meta">${formatRs(p.price)} · Stock ${p.stock_count}</span>
+      </div>
+    `).join('');
+
+    results.querySelectorAll('.invoice-search-item').forEach((el, i) => {
+      el.addEventListener('click', () => addInvoiceItem(rows[i]));
+    });
+  } catch (err) {
+    results.innerHTML = `<div class="invoice-search-empty">${escapeHtml(err.message)}</div>`;
+  }
+}
+
+async function saveInvoice() {
+  const errorText = document.getElementById('invoiceFormError');
+  errorText.textContent = '';
+
+  const payload = {
+    customer_name: document.getElementById('invCustomerName').value.trim(),
+    customer_mobile: document.getElementById('invCustomerMobile').value.trim(),
+    customer_address: document.getElementById('invCustomerAddress').value.trim(),
+    invoice_date: document.getElementById('invDate').value,
+    items: invoiceItems.map((it) => ({
+      product_id: it.product_id,
+      item_name: (it.item_name || '').trim(),
+      warranty: it.warranty,
+      quantity: Number(it.quantity),
+      unit_price: Number(it.unit_price)
+    })),
+    discount: Number(document.getElementById('invDiscount').value) || 0,
+    advance_paid: Number(document.getElementById('invAdvance').value) || 0,
+    created_by: currentUser.username
+  };
+
+  try {
+    const invoice = await API.post('/invoices', payload);
+    enterInvoiceSavedMode(invoice);
+    setStatus(`Invoice #${invoice.id} saved for ${invoice.customer_name}.`);
+  } catch (err) {
+    errorText.textContent = err.message;
+  }
+}
+
+function enterInvoiceSavedMode(invoice) {
+  invoiceSaved = true;
+
+  const numberBar = document.getElementById('invoiceNumberBar');
+  numberBar.textContent = `Invoice #INV-${String(invoice.id).padStart(6, '0')} — Saved ${formatBillDate(invoice.invoice_date)}`;
+  numberBar.style.display = 'block';
+
+  [
+    'invCustomerName', 'invCustomerMobile', 'invCustomerAddress', 'invDate',
+    'invDiscount', 'invAdvance', 'invStockSearch', 'invAddBlankBtn'
+  ].forEach((id) => { document.getElementById(id).disabled = true; });
+
+  document.getElementById('invoiceLockNotice').style.display = 'none';
+  document.getElementById('invClearBtn').style.display = 'none';
+  document.getElementById('invSaveBtn').style.display = 'none';
+  document.getElementById('invPrintBtn').style.display = '';
+  document.getElementById('invNewBtn').style.display = '';
+
+  renderInvoiceItems();
 }

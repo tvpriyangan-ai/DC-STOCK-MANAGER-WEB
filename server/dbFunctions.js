@@ -249,6 +249,101 @@ const DatabaseFunctions = {
     );
     return rows;
   },
+
+  // ==========================
+  // INVOICES
+  // ==========================
+
+  // Inserts the invoice header + line items in one transaction and logs
+  // the activity. Does not touch product.stock_count - the Invoice button
+  // produces an estimate document, not a stock movement.
+  async createInvoice({
+    customer_name,
+    customer_mobile,
+    customer_address,
+    invoice_date,
+    items,
+    discount,
+    advance_paid,
+    created_by,
+  }) {
+    const subtotal = items.reduce((sum, it) => sum + it.quantity * it.unit_price, 0);
+    const finalAmount = Math.max(subtotal - discount, 0);
+    const balanceDue = finalAmount - advance_paid;
+
+    const conn = await pool.getConnection();
+    try {
+      await conn.beginTransaction();
+
+      const [result] = await conn.query(
+        `
+        INSERT INTO invoices
+          (customer_name, customer_mobile, customer_address, invoice_date,
+           subtotal, discount, final_amount, advance_paid, balance_due, created_by)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `,
+        [
+          customer_name,
+          customer_mobile,
+          customer_address,
+          invoice_date,
+          subtotal,
+          discount,
+          finalAmount,
+          advance_paid,
+          balanceDue,
+          created_by,
+        ]
+      );
+      const invoiceId = result.insertId;
+
+      for (const it of items) {
+        await conn.query(
+          `
+          INSERT INTO invoice_items
+            (invoice_id, product_id, item_name, warranty, quantity, unit_price, line_total)
+          VALUES (?, ?, ?, ?, ?, ?, ?)
+        `,
+          [
+            invoiceId,
+            it.product_id || null,
+            it.item_name,
+            it.warranty || "",
+            it.quantity,
+            it.unit_price,
+            it.quantity * it.unit_price,
+          ]
+        );
+      }
+
+      await conn.query(`INSERT INTO activity_log (username, activity) VALUES (?, ?)`, [
+        created_by,
+        `Created Invoice #${invoiceId} : ${customer_name} (Rs. ${finalAmount.toFixed(2)})`,
+      ]);
+
+      await conn.commit();
+
+      return {
+        id: invoiceId,
+        customer_name,
+        customer_mobile,
+        customer_address,
+        invoice_date,
+        subtotal,
+        discount,
+        final_amount: finalAmount,
+        advance_paid,
+        balance_due: balanceDue,
+        created_by,
+        items,
+      };
+    } catch (err) {
+      await conn.rollback();
+      throw err;
+    } finally {
+      conn.release();
+    }
+  },
 };
 
 module.exports = DatabaseFunctions;

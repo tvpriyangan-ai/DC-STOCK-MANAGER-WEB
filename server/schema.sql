@@ -82,3 +82,34 @@ SET @sql := IF(@idx_exists = 0, 'CREATE INDEX idx_customer_bills_date ON custome
 PREPARE stmt FROM @sql;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
+
+-- ---------------- invoices / invoice_items ----------------
+-- Powers the "🧾 Invoice" header button - a system-generated estimate
+-- builder (search stock or add a blank line, discount/advance, totals).
+-- Does NOT touch product.stock_count - it's a record of the estimate only.
+CREATE TABLE IF NOT EXISTS invoices (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    customer_name VARCHAR(255) NOT NULL,
+    customer_mobile VARCHAR(50) NOT NULL,
+    customer_address VARCHAR(500) NOT NULL,
+    invoice_date DATE NOT NULL,
+    subtotal DECIMAL(10,2) NOT NULL,
+    discount DECIMAL(10,2) NOT NULL DEFAULT 0,
+    final_amount DECIMAL(10,2) NOT NULL,
+    advance_paid DECIMAL(10,2) NOT NULL DEFAULT 0,
+    balance_due DECIMAL(10,2) NOT NULL,
+    created_by VARCHAR(50) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS invoice_items (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    invoice_id INT NOT NULL,
+    product_id INT NULL,
+    item_name VARCHAR(200) NOT NULL,
+    warranty VARCHAR(100),
+    quantity INT NOT NULL,
+    unit_price DECIMAL(10,2) NOT NULL,
+    line_total DECIMAL(10,2) NOT NULL,
+    FOREIGN KEY (invoice_id) REFERENCES invoices(id) ON DELETE CASCADE
+);
