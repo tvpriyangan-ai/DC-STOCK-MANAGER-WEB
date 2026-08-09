@@ -951,7 +951,8 @@ async function downloadInvoiceImage() {
     const canvas = await html2canvas(document.getElementById('invoiceDoc'), {
       scale: 2,
       backgroundColor: '#ffffff',
-      useCORS: true
+      useCORS: true,
+      ignoreElements: (el) => el.classList && el.classList.contains('no-print')
     });
     const link = document.createElement('a');
     link.download = `Invoice-INV-${String(currentInvoiceId).padStart(6, '0')}.png`;
