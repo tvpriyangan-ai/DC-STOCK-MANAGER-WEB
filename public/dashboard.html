@@ -333,7 +333,7 @@
 
       <div class="invoice-doc" id="invoiceDoc">
         <div class="invoice-brand">
-          <img src="images/logo_v2.jpeg" alt="DC Electricals" class="invoice-logo" onerror="this.style.display='none'">
+          <img src="images/dc%20logo.jpg" alt="DC Electricals" class="invoice-logo" onerror="this.style.display='none'">
         </div>
 
         <div class="invoice-contact-bar">
@@ -425,6 +425,7 @@
             <button type="button" id="invClearBtn" class="btn btn-gray">Clear</button>
             <button type="button" id="invSaveBtn" class="btn btn-cyan" disabled>💾 Save Invoice</button>
             <button type="button" id="invPrintBtn" class="btn btn-blue" style="display:none;">🖨️ Print</button>
+            <button type="button" id="invDownloadBtn" class="btn btn-orange" style="display:none;">⬇️ Download</button>
             <button type="button" id="invNewBtn" class="btn btn-green" style="display:none;">➕ New Invoice</button>
           </div>
         </div>
@@ -432,6 +433,7 @@
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script src="js/api.js"></script>
   <script src="js/dashboard.js"></script>
 </body>

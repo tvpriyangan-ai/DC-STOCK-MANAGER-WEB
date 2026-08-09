@@ -673,6 +673,7 @@ async function searchCustomerBills(keyword) {
 let invoiceItems = [];
 let invoiceRowCounter = 0;
 let invoiceSaved = false;
+let currentInvoiceId = null;
 
 function formatRs(n) {
   return 'Rs ' + Number(n || 0).toFixed(2);
@@ -713,6 +714,7 @@ function initInvoiceModal() {
 
   document.getElementById('invSaveBtn').addEventListener('click', saveInvoice);
   document.getElementById('invPrintBtn').addEventListener('click', () => window.print());
+  document.getElementById('invDownloadBtn').addEventListener('click', downloadInvoiceImage);
   document.getElementById('invNewBtn').addEventListener('click', resetInvoiceForm);
 
   document.getElementById('invoiceItemsBody').addEventListener('input', (e) => {
@@ -755,6 +757,7 @@ function resetInvoiceForm() {
   invoiceSaved = false;
   invoiceItems = [];
   invoiceRowCounter = 0;
+  currentInvoiceId = null;
 
   document.getElementById('invCustomerName').value = '';
   document.getElementById('invCustomerMobile').value = '';
@@ -775,6 +778,7 @@ function resetInvoiceForm() {
   document.getElementById('invClearBtn').style.display = '';
   document.getElementById('invSaveBtn').style.display = '';
   document.getElementById('invPrintBtn').style.display = 'none';
+  document.getElementById('invDownloadBtn').style.display = 'none';
   document.getElementById('invNewBtn').style.display = 'none';
 
   renderInvoiceItems();
@@ -869,7 +873,7 @@ async function searchInvoiceStock(keyword) {
       results.innerHTML = '<div class="invoice-search-empty">No matching products.</div>';
       return;
     }
-    results.innerHTML = rows.slice(0, 8).map((p, i) => `
+    results.innerHTML = rows.map((p, i) => `
       <div class="invoice-search-item" data-index="${i}">
         <span>${escapeHtml(p.product_name)}</span>
         <span class="invoice-search-meta">${formatRs(p.price)} · Stock ${p.stock_count}</span>
@@ -916,6 +920,7 @@ async function saveInvoice() {
 
 function enterInvoiceSavedMode(invoice) {
   invoiceSaved = true;
+  currentInvoiceId = invoice.id;
 
   const numberBar = document.getElementById('invoiceNumberBar');
   numberBar.textContent = `Invoice #INV-${String(invoice.id).padStart(6, '0')} — Saved ${formatBillDate(invoice.invoice_date)}`;
@@ -930,7 +935,32 @@ function enterInvoiceSavedMode(invoice) {
   document.getElementById('invClearBtn').style.display = 'none';
   document.getElementById('invSaveBtn').style.display = 'none';
   document.getElementById('invPrintBtn').style.display = '';
+  document.getElementById('invDownloadBtn').style.display = '';
   document.getElementById('invNewBtn').style.display = '';
 
   renderInvoiceItems();
+}
+
+async function downloadInvoiceImage() {
+  const btn = document.getElementById('invDownloadBtn');
+  const originalText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '⏳ Preparing...';
+
+  try {
+    const canvas = await html2canvas(document.getElementById('invoiceDoc'), {
+      scale: 2,
+      backgroundColor: '#ffffff',
+      useCORS: true
+    });
+    const link = document.createElement('a');
+    link.download = `Invoice-INV-${String(currentInvoiceId).padStart(6, '0')}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  } catch (err) {
+    alert('Could not generate the invoice image: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = originalText;
+  }
 }

@@ -577,11 +577,11 @@ button { font-family: inherit; }
   background: #fff;
   display: flex;
   justify-content: center;
-  padding: 18px 20px 8px;
+  padding: 6px 20px;
 }
 
 .invoice-logo {
-  max-width: 320px;
+  max-width: 480px;
   width: 100%;
   height: auto;
   object-fit: contain;
