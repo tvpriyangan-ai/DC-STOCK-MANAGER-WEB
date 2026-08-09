@@ -7,11 +7,12 @@ const express = require('express');
 const router = express.Router();
 const fs = require('fs');
 const path = require('path');
+const requireAuth = require('../middleware/requireAuth');
 
 const imagesDir = path.join(__dirname, '..', '..', 'public', 'images');
 const validExt = ['.jpg', '.jpeg', '.png', '.webp', '.gif'];
 
-router.get('/', (req, res) => {
+router.get('/', requireAuth, (req, res) => {
   try {
     fs.mkdirSync(imagesDir, { recursive: true });
 
@@ -22,7 +23,8 @@ router.get('/', (req, res) => {
 
     res.json(files);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Something went wrong. Please try again.' });
   }
 });
 

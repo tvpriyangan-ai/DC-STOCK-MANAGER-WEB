@@ -3,6 +3,7 @@
 // Same queries, same table/column names, just written as async JS instead
 // of Python + mysql.connector.
 
+const bcrypt = require("bcryptjs");
 const pool = require("./db");
 
 const DatabaseFunctions = {
@@ -155,25 +156,33 @@ const DatabaseFunctions = {
   },
 
   async addUser({ full_name, username, password, role, status }) {
+    const hashed = await bcrypt.hash(password, 10);
     const [result] = await pool.query(
       `
       INSERT INTO users (full_name, username, password, role, status)
       VALUES (?, ?, ?, ?, ?)
     `,
-      [full_name, username, password, role, status]
+      [full_name, username, hashed, role, status]
     );
     return result.insertId;
   },
 
+  // Leaving `password` blank on an edit keeps the existing password -
+  // matches the dashboard's "Edit User" form, which always shows the
+  // password field empty rather than round-tripping the hash.
   async updateUser(id, { full_name, username, password, role, status }) {
-    await pool.query(
-      `
-      UPDATE users
-      SET full_name=?, username=?, password=?, role=?, status=?
-      WHERE id=?
-    `,
-      [full_name, username, password, role, status, id]
-    );
+    if (password && password.trim()) {
+      const hashed = await bcrypt.hash(password.trim(), 10);
+      await pool.query(
+        `UPDATE users SET full_name=?, username=?, password=?, role=?, status=? WHERE id=?`,
+        [full_name, username, hashed, role, status, id]
+      );
+    } else {
+      await pool.query(
+        `UPDATE users SET full_name=?, username=?, role=?, status=? WHERE id=?`,
+        [full_name, username, role, status, id]
+      );
+    }
   },
 
   async getUserStatus(id) {
@@ -187,19 +196,6 @@ const DatabaseFunctions = {
 
   async deleteUser(id) {
     await pool.query(`DELETE FROM users WHERE id=?`, [id]);
-  },
-
-  async findLoginUser(username, password) {
-    // NOTE: matches the original app's plain-text password check.
-    // Flagged as a security improvement opportunity in the README.
-    const [rows] = await pool.query(
-      `
-      SELECT username, role FROM users
-      WHERE username=? AND password=? AND status='ACTIVE'
-    `,
-      [username, password]
-    );
-    return rows[0] || null;
   },
 
   // ==========================

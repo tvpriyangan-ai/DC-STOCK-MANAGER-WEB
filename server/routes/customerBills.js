@@ -13,7 +13,8 @@ router.get("/search", async (req, res) => {
     if (!q) return res.json([]);
     res.json(await db.searchCustomerBills(q));
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: "Something went wrong. Please try again." });
   }
 });
 

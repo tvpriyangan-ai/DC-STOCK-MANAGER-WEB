@@ -1,14 +1,16 @@
 const express = require("express");
 const router = express.Router();
 const db = require("../dbFunctions");
+const requireAuth = require("../middleware/requireAuth");
 
 // GET /api/activity?limit=100
-router.get("/", async (req, res) => {
+router.get("/", requireAuth, async (req, res) => {
   try {
     const limit = parseInt(req.query.limit, 10) || 100;
     res.json(await db.getRecentActivities(limit));
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: "Something went wrong. Please try again." });
   }
 });
 

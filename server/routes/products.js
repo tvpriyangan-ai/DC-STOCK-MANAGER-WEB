@@ -8,6 +8,7 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../db');
 const requireAdmin = require('../middleware/requireAdmin');
+const requireAuth = require('../middleware/requireAuth');
 
 // Product images are pre-uploaded to public/images via GitHub (see
 // routes/images.js), not uploaded through this API - the catalog is fixed,
@@ -24,7 +25,8 @@ router.get('/dashboard/counts', async (req, res) => {
 
     res.json({ total_products, total_stock, low_stock, out_of_stock });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Something went wrong. Please try again.' });
   }
 });
 
@@ -37,7 +39,8 @@ router.get('/out-of-stock', async (req, res) => {
     );
     res.json(rows);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Something went wrong. Please try again.' });
   }
 });
 
@@ -70,7 +73,8 @@ router.get('/search', async (req, res) => {
     );
     res.json(rows);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Something went wrong. Please try again.' });
   }
 });
 
@@ -93,7 +97,8 @@ router.get('/', async (req, res) => {
     }
     res.json(rows);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Something went wrong. Please try again.' });
   }
 });
 
@@ -104,7 +109,8 @@ router.get('/:id', async (req, res) => {
     if (rows.length === 0) return res.status(404).json({ error: 'Product not found.' });
     res.json(rows[0]);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Something went wrong. Please try again.' });
   }
 });
 
@@ -138,7 +144,8 @@ router.post('/', requireAdmin, async (req, res) => {
 
     res.status(201).json({ id: result.insertId });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Something went wrong. Please try again.' });
   }
 });
 
@@ -166,13 +173,15 @@ router.put('/:id', requireAdmin, async (req, res) => {
 
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Something went wrong. Please try again.' });
   }
 });
 
 // ---------- STOCK IN / OUT ----------
-router.put('/:id/stock', async (req, res) => {
-  const { operation, quantity, username } = req.body;
+router.put('/:id/stock', requireAuth, async (req, res) => {
+  const { operation, quantity } = req.body;
+  const username = req.user.username;
   const qty = parseInt(quantity);
 
   if (!qty || qty <= 0) {
@@ -204,7 +213,8 @@ router.put('/:id/stock', async (req, res) => {
 
     res.json({ success: true, new_stock: newStock });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Something went wrong. Please try again.' });
   }
 });
 
@@ -223,7 +233,8 @@ router.delete('/:id', requireAdmin, async (req, res) => {
 
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Something went wrong. Please try again.' });
   }
 });
 

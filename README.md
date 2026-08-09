@@ -39,6 +39,10 @@ Open `.env` and confirm the MySQL details match your Workbench connection
 (host/user/password/database). It's pre-filled with the values from your
 original `database.py`.
 
+Also set `JWT_SECRET` in `.env` to a random value (a command to generate
+one is in `.env.example`) — this is what signs login tokens, so it must
+be set and must stay private.
+
 Then, in MySQL Workbench, run `server/schema.sql` once. It's written with
 `IF NOT EXISTS` so it will **not** delete any of your existing products —
 it just makes sure every column the web app needs (like `users.full_name`
@@ -51,6 +55,21 @@ customer name / bill date history from `server/customer_bills.csv` — to
 refresh it later with an updated spreadsheet, regenerate that `.sql` file
 from the new CSV and re-run it (it clears and reloads the table, so it's
 safe to re-run).
+
+### Auth setup (one-time, only needed on a database created before this)
+
+If your `users` table already has accounts with plain-text passwords
+(anything created before this change), hash them in place by running,
+from the `server/` folder:
+
+```bash
+node scripts/migrate_passwords_to_bcrypt.js
+```
+
+It only rewrites rows that aren't already bcrypt hashes, so it's safe to
+run more than once. A brand-new database (via `schema.sql`) doesn't need
+this — its seed `admin` account is created with an already-hashed
+password.
 
 ## 2. Run it
 
@@ -104,14 +123,11 @@ step — happy to help set that up when you're ready.
 
 ## 5. Known gaps / things worth improving next
 
-- **Passwords are stored in plain text**, exactly like the original app.
-  This was fine for a private desktop tool, but a bit riskier once it's
-  reachable over a network. Worth switching to hashed passwords
-  (e.g. bcrypt) before opening this up beyond your local WiFi.
-- **No login sessions/tokens yet** — anyone who can reach the server URL can
-  call the API directly (the frontend just checks role client-side). Fine
-  on a trusted local network; would need proper auth (JWT/sessions) before
-  going on the public internet.
+- **Auth fixed:** passwords are now hashed with bcrypt (never stored or
+  compared in plain text), and login issues a signed JWT that every
+  protected route verifies server-side — the old trick of just sending an
+  `X-Username` header no longer works. See "Auth setup" below for the
+  one-time steps this requires on your existing database.
 - `product_manager.py` (the file that likely built your original product
   table screen) never made it into what I received, so the table/detail
   panel here was rebuilt from your screenshots + `database_functions.py`

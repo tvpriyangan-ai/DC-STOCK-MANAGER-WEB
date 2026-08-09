@@ -41,8 +41,12 @@ CREATE TABLE IF NOT EXISTS users (
 ALTER TABLE users ADD COLUMN IF NOT EXISTS full_name VARCHAR(100) AFTER id;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS status VARCHAR(20) NOT NULL DEFAULT 'Active';
 
+-- Password is a bcrypt hash of "admin123" (not the plaintext value) so a
+-- fresh install never has a plaintext password sitting in the DB. Log in
+-- with admin / admin123 once, then change it immediately from User
+-- Management - this default hash is public (it's in this file, in git).
 INSERT INTO users (full_name, username, password, role, status)
-SELECT 'Administrator', 'admin', 'admin123', 'Admin', 'Active'
+SELECT 'Administrator', 'admin', '$2a$10$gx3UQsTVlQn6/mp0fUc6WOs0/4jQAKJpRcn2cOKpc5akLE46G9VNu', 'Admin', 'Active'
 WHERE NOT EXISTS (SELECT 1 FROM users WHERE username = 'admin');
 
 -- ---------------- activity_log ----------------

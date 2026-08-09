@@ -5,9 +5,18 @@ function authHeader() {
   if (!stored) return {};
   try {
     const user = JSON.parse(stored);
-    return user && user.username ? { 'X-Username': user.username } : {};
+    return user && user.token ? { 'Authorization': 'Bearer ' + user.token } : {};
   } catch (e) {
     return {};
+  }
+}
+
+function handleAuthFailure(status) {
+  if (status === 401) {
+    sessionStorage.removeItem('dc_user');
+    if (!location.pathname.endsWith('index.html') && location.pathname !== '/') {
+      location.href = 'index.html';
+    }
   }
 }
 
@@ -17,7 +26,10 @@ const API = {
   async get(path) {
     const res = await fetch(this.base + path, { headers: authHeader() });
     const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(data.error || 'Request failed.');
+    if (!res.ok) {
+      handleAuthFailure(res.status);
+      throw new Error(data.error || 'Request failed.');
+    }
     return data;
   },
 
@@ -28,7 +40,10 @@ const API = {
       body: isFormData ? body : JSON.stringify(body)
     });
     const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(data.error || 'Request failed.');
+    if (!res.ok) {
+      handleAuthFailure(res.status);
+      throw new Error(data.error || 'Request failed.');
+    }
     return data;
   },
 
@@ -39,7 +54,10 @@ const API = {
       body: isFormData ? body : JSON.stringify(body)
     });
     const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(data.error || 'Request failed.');
+    if (!res.ok) {
+      handleAuthFailure(res.status);
+      throw new Error(data.error || 'Request failed.');
+    }
     return data;
   },
 
@@ -50,14 +68,20 @@ const API = {
       body: isFormData ? body : JSON.stringify(body)
     });
     const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(data.error || 'Request failed.');
+    if (!res.ok) {
+      handleAuthFailure(res.status);
+      throw new Error(data.error || 'Request failed.');
+    }
     return data;
   },
 
   async delete(path) {
     const res = await fetch(this.base + path, { method: 'DELETE', headers: authHeader() });
     const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(data.error || 'Request failed.');
+    if (!res.ok) {
+      handleAuthFailure(res.status);
+      throw new Error(data.error || 'Request failed.');
+    }
     return data;
   }
 };

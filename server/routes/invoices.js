@@ -1,12 +1,13 @@
 const express = require("express");
 const router = express.Router();
 const db = require("../dbFunctions");
+const requireAuth = require("../middleware/requireAuth");
 
 // Open to any logged-in user (Admin or staff) - unlike Customer Bill /
 // Users, invoice creation isn't gated by requireAdmin.
 
 // POST /api/invoices
-router.post("/", async (req, res) => {
+router.post("/", requireAuth, async (req, res) => {
   const {
     customer_name,
     customer_mobile,
@@ -15,7 +16,6 @@ router.post("/", async (req, res) => {
     items,
     discount,
     advance_paid,
-    created_by,
   } = req.body;
 
   if (!customer_name || !customer_name.trim()) {
@@ -69,11 +69,12 @@ router.post("/", async (req, res) => {
       items: cleanItems,
       discount: discountNum,
       advance_paid: advanceNum,
-      created_by: created_by || req.header("x-username") || "Unknown",
+      created_by: req.user.username,
     });
     res.status(201).json(invoice);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: "Something went wrong. Please try again." });
   }
 });
 

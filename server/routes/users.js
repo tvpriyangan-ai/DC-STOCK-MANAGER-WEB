@@ -11,7 +11,8 @@ router.get("/", async (req, res) => {
   try {
     res.json(await db.getAllUsers());
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: "Something went wrong. Please try again." });
   }
 });
 
@@ -22,7 +23,8 @@ router.get("/:id", async (req, res) => {
     if (!row) return res.status(404).json({ error: "User not found." });
     res.json(row);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: "Something went wrong. Please try again." });
   }
 });
 
@@ -39,7 +41,11 @@ router.post("/", async (req, res) => {
     });
     res.status(201).json({ id });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    if (err.code === "ER_DUP_ENTRY") {
+      return res.status(409).json({ error: "That username is already taken." });
+    }
+    console.error(err);
+    res.status(500).json({ error: "Something went wrong. Please try again." });
   }
 });
 
@@ -50,7 +56,11 @@ router.put("/:id", async (req, res) => {
     await db.updateUser(req.params.id, { full_name, username, password, role, status });
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    if (err.code === "ER_DUP_ENTRY") {
+      return res.status(409).json({ error: "That username is already taken." });
+    }
+    console.error(err);
+    res.status(500).json({ error: "Something went wrong. Please try again." });
   }
 });
 
@@ -63,7 +73,8 @@ router.patch("/:id/toggle-status", async (req, res) => {
     await db.updateUserStatus(req.params.id, next);
     res.json({ success: true, status: next });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: "Something went wrong. Please try again." });
   }
 });
 
@@ -73,7 +84,8 @@ router.delete("/:id", async (req, res) => {
     await db.deleteUser(req.params.id);
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: "Something went wrong. Please try again." });
   }
 });
 
