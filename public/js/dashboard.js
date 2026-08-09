@@ -26,7 +26,7 @@ let selectedUserId = null;
 // buttons regular staff can't use out of their way.
 function applyRolePermissions() {
   const isAdmin = (currentUser.role || '').trim().toLowerCase() === 'admin';
-  ['addBtn', 'updateBtn', 'deleteBtn', 'usersBtn'].forEach((id) => {
+  ['addBtn', 'updateBtn', 'deleteBtn', 'usersBtn', 'customerBillBtn'].forEach((id) => {
     document.getElementById(id).style.display = isAdmin ? '' : 'none';
   });
 }
@@ -41,6 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initHistoryModal();
   initUsersModal();
   initUserFormModal();
+  initCustomerBillModal();
 
   loadDashboardCounts();
   loadProducts();
@@ -598,4 +599,70 @@ function openEditUserModal(id) {
   document.getElementById('userStatus').value = u.status;
   document.getElementById('userFormError').textContent = '';
   document.getElementById('userFormModal').classList.add('open');
+}
+
+// ================= CUSTOMER BILL MODAL =================
+
+function initCustomerBillModal() {
+  const overlay = document.getElementById('customerBillModal');
+  document.getElementById('customerBillCloseBtn').addEventListener('click', () => overlay.classList.remove('open'));
+
+  const search = document.getElementById('customerBillSearch');
+  let timer;
+  search.addEventListener('input', () => {
+    clearTimeout(timer);
+    timer = setTimeout(() => searchCustomerBills(search.value.trim()), 300);
+  });
+
+  document.getElementById('customerBillBtn').addEventListener('click', openCustomerBillModal);
+}
+
+function openCustomerBillModal() {
+  document.getElementById('customerBillSearch').value = '';
+  document.getElementById('customerBillTableBody').innerHTML = '';
+  document.getElementById('customerBillEmptyState').style.display = 'none';
+  document.getElementById('customerBillTotal').textContent = 'Type a customer name or date to search.';
+  document.getElementById('customerBillModal').classList.add('open');
+  document.getElementById('customerBillSearch').focus();
+}
+
+function formatBillDate(dateStr) {
+  if (!dateStr) return '—';
+  const [year, month, day] = dateStr.split('-');
+  const d = new Date(Number(year), Number(month) - 1, Number(day));
+  return d.toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+async function searchCustomerBills(keyword) {
+  const tbody = document.getElementById('customerBillTableBody');
+  const empty = document.getElementById('customerBillEmptyState');
+  const total = document.getElementById('customerBillTotal');
+
+  if (!keyword) {
+    tbody.innerHTML = '';
+    empty.style.display = 'none';
+    total.textContent = 'Type a customer name or date to search.';
+    return;
+  }
+
+  try {
+    const rows = await API.get('/customer-bills/search?q=' + encodeURIComponent(keyword));
+    tbody.innerHTML = '';
+
+    if (rows.length === 0) {
+      empty.style.display = 'block';
+      total.textContent = '';
+      return;
+    }
+    empty.style.display = 'none';
+
+    rows.forEach((r) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${escapeHtml(r.customer_name)}</td><td>${formatBillDate(r.bill_date)}</td>`;
+      tbody.appendChild(tr);
+    });
+    total.textContent = `${rows.length} Result(s)`;
+  } catch (err) {
+    total.textContent = 'Search error: ' + err.message;
+  }
 }

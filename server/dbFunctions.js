@@ -225,6 +225,30 @@ const DatabaseFunctions = {
       [username, activity]
     );
   },
+
+  // ==========================
+  // CUSTOMER BILLS
+  // ==========================
+
+  // Matches on customer name OR the bill date formatted the same way it
+  // appears in the source spreadsheet (e.g. "6/21/2023"), so typing either
+  // a name fragment or a date finds the right rows.
+  async searchCustomerBills(keyword) {
+    const like = `%${keyword}%`;
+    const [rows] = await pool.query(
+      `
+      SELECT id, customer_name, bill_date
+      FROM customer_bills
+      WHERE customer_name LIKE ?
+         OR DATE_FORMAT(bill_date, '%c/%e/%Y') LIKE ?
+         OR DATE_FORMAT(bill_date, '%Y-%m-%d') LIKE ?
+      ORDER BY customer_name, bill_date
+      LIMIT 200
+    `,
+      [like, like, like]
+    );
+    return rows;
+  },
 };
 
 module.exports = DatabaseFunctions;

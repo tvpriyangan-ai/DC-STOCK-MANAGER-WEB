@@ -13,6 +13,7 @@ const productRoutes = require('./routes/products');
 const userRoutes = require('./routes/users');
 const activityRoutes = require('./routes/activity');
 const imageRoutes = require('./routes/images');
+const customerBillsRoutes = require('./routes/customerBills');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -32,6 +33,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/activity', activityRoutes);
 app.use('/api/images', imageRoutes);
+app.use('/api/customer-bills', customerBillsRoutes);
 
 app.listen(PORT, () => {
   console.log(`DC STOCK MANAGER running at http://localhost:${PORT}`);

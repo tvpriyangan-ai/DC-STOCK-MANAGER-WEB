@@ -15,6 +15,7 @@
     <img src="images/logo_v2.jpeg" alt="" class="header-logo" onerror="this.style.display='none'">
     <h1 class="header-title">DC STOCK MANAGER</h1>
     <div class="header-actions">
+      <button id="customerBillBtn" class="btn btn-purple btn-sm">🧾 Customer Bill</button>
       <button id="usersBtn" class="btn btn-green btn-sm">👥 Users</button>
       <button id="logoutBtn" class="btn btn-red btn-sm">Logout</button>
     </div>
@@ -300,6 +301,27 @@
           <button type="button" class="btn btn-gray" id="userFormCancelBtn">❌ Cancel</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- ===================== CUSTOMER BILL MODAL ===================== -->
+  <div id="customerBillModal" class="modal-overlay">
+    <div class="modal modal-wide">
+      <div class="modal-header-row">
+        <h3>🧾 CUSTOMER BILL</h3>
+        <button class="btn btn-red btn-sm" id="customerBillCloseBtn">❌ Close</button>
+      </div>
+      <input type="search" id="customerBillSearch" class="search-input" placeholder="🔍 Search by customer name or date (e.g. 6/21/2023)...">
+      <div class="table-wrap">
+        <table class="product-table">
+          <thead>
+            <tr><th>Customer Name</th><th>Bill Date</th></tr>
+          </thead>
+          <tbody id="customerBillTableBody"></tbody>
+        </table>
+        <p id="customerBillEmptyState" class="empty-state" style="display:none;">No matching customer bills found.</p>
+      </div>
+      <p id="customerBillTotal" class="status-bar"></p>
     </div>
   </div>
 

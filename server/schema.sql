@@ -52,3 +52,33 @@ CREATE TABLE IF NOT EXISTS activity_log (
     activity TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- ---------------- customer_bills ----------------
+-- Historical customer/bill-date lookup, imported once from
+-- customer_bills.csv via customer_bills_import.sql. Powers the
+-- "Customer Bill" search dialog (Admin only).
+CREATE TABLE IF NOT EXISTS customer_bills (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    customer_name VARCHAR(255) NOT NULL,
+    bill_date DATE NULL
+);
+
+-- MySQL has no "CREATE INDEX IF NOT EXISTS", so this checks
+-- information_schema first to stay safe to re-run.
+SET @idx_exists := (
+    SELECT COUNT(*) FROM information_schema.statistics
+    WHERE table_schema = DATABASE() AND table_name = 'customer_bills' AND index_name = 'idx_customer_bills_name'
+);
+SET @sql := IF(@idx_exists = 0, 'CREATE INDEX idx_customer_bills_name ON customer_bills(customer_name)', 'SELECT 1');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @idx_exists := (
+    SELECT COUNT(*) FROM information_schema.statistics
+    WHERE table_schema = DATABASE() AND table_name = 'customer_bills' AND index_name = 'idx_customer_bills_date'
+);
+SET @sql := IF(@idx_exists = 0, 'CREATE INDEX idx_customer_bills_date ON customer_bills(bill_date)', 'SELECT 1');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;

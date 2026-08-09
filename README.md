@@ -45,6 +45,13 @@ it just makes sure every column the web app needs (like `users.full_name`
 and `users.status`) is present, since your two SQL files had slightly
 different `users` table versions.
 
+If you want the **Customer Bill** search (see section 4 below), also run
+`server/customer_bills_import.sql` once, after `schema.sql`. It loads the
+customer name / bill date history from `server/customer_bills.csv` — to
+refresh it later with an updated spreadsheet, regenerate that `.sql` file
+from the new CSV and re-run it (it clears and reloads the table, so it's
+safe to re-run).
+
 ## 2. Run it
 
 ```bash
@@ -89,6 +96,11 @@ step — happy to help set that up when you're ready.
 - **`session.py` globals → browser session.** The logged-in user is kept in
   the browser's session storage instead of Python globals, and login state
   clears when you log out or close the tab.
+- **New: Customer Bill search (Admin only).** The 🧾 **Customer Bill** button
+  in the header (hidden for non-Admin accounts, and blocked server-side too)
+  opens a dialog where you can search by customer name or bill date
+  (e.g. `Rajah` or `6/21/2023`) to look up historical bills imported from
+  `customer_bills.csv`.
 
 ## 5. Known gaps / things worth improving next
 
