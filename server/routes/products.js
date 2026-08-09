@@ -47,11 +47,17 @@ router.get('/out-of-stock', async (req, res) => {
 // lands in (e.g. "dvr" in the name vs "CCTV" in the category) doesn't
 // stop a match - "cctv camera" now finds a camera whose category is CCTV
 // even though "cctv camera" never appears as a contiguous substring.
+//
+// Both sides are wrapped in LOWER() rather than relying on LIKE's own
+// case-insensitivity - the production TiDB database uses a case-sensitive
+// collation, so plain LIKE was silently missing anything whose case didn't
+// match exactly (e.g. searching "cctv" found 4 rows; the CCTV category
+// itself, stored uppercase, only turned up 39 more once this was fixed).
 router.get('/search', async (req, res) => {
-  const words = (req.query.q || '').trim().split(/\s+/).filter(Boolean);
+  const words = (req.query.q || '').trim().toLowerCase().split(/\s+/).filter(Boolean);
   if (words.length === 0) return res.json([]);
 
-  const whereClause = words.map(() => '(category LIKE ? OR product_name LIKE ?)').join(' AND ');
+  const whereClause = words.map(() => '(LOWER(category) LIKE ? OR LOWER(product_name) LIKE ?)').join(' AND ');
   const params = words.flatMap((w) => [`%${w}%`, `%${w}%`]);
 
   try {
