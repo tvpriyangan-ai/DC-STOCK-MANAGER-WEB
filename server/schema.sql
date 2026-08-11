@@ -87,6 +87,44 @@ PREPARE stmt FROM @sql;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
 
+-- ---------------- wifi_numbers ----------------
+-- Internal wifi/sim lookup, imported once from wifi_numbers.csv via
+-- wifi_numbers_import.sql. Powers the "Wifi Numbers" search dialog
+-- (Admin, and the user "thanusi", only).
+CREATE TABLE IF NOT EXISTS wifi_numbers (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    code VARCHAR(20),
+    number VARCHAR(30),
+    name VARCHAR(255)
+);
+
+SET @idx_exists := (
+    SELECT COUNT(*) FROM information_schema.statistics
+    WHERE table_schema = DATABASE() AND table_name = 'wifi_numbers' AND index_name = 'idx_wifi_numbers_code'
+);
+SET @sql := IF(@idx_exists = 0, 'CREATE INDEX idx_wifi_numbers_code ON wifi_numbers(code)', 'SELECT 1');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @idx_exists := (
+    SELECT COUNT(*) FROM information_schema.statistics
+    WHERE table_schema = DATABASE() AND table_name = 'wifi_numbers' AND index_name = 'idx_wifi_numbers_number'
+);
+SET @sql := IF(@idx_exists = 0, 'CREATE INDEX idx_wifi_numbers_number ON wifi_numbers(number)', 'SELECT 1');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @idx_exists := (
+    SELECT COUNT(*) FROM information_schema.statistics
+    WHERE table_schema = DATABASE() AND table_name = 'wifi_numbers' AND index_name = 'idx_wifi_numbers_name'
+);
+SET @sql := IF(@idx_exists = 0, 'CREATE INDEX idx_wifi_numbers_name ON wifi_numbers(name)', 'SELECT 1');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
 -- ---------------- invoices / invoice_items ----------------
 -- Powers the "🧾 Invoice" header button - a system-generated estimate
 -- builder (search stock or add a blank line, discount/advance, totals).

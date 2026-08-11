@@ -158,6 +158,7 @@ button { font-family: inherit; }
 .btn-cyan   { background: #17A2B8; }
 .btn-orange { background: var(--orange); }
 .btn-purple { background: var(--purple); }
+.btn-teal   { background: #009688; }
 .btn-gray   { background: #555; }
 
 /* ---------------- APP HEADER ---------------- */

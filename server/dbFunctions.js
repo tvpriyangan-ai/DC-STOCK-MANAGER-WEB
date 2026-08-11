@@ -247,6 +247,29 @@ const DatabaseFunctions = {
   },
 
   // ==========================
+  // WIFI NUMBERS
+  // ==========================
+
+  // Matches on code, number, or name so typing any part of what's on
+  // screen (router code, sim number, or the customer/note text) finds it.
+  async searchWifiNumbers(keyword) {
+    const like = `%${keyword.toLowerCase()}%`;
+    const [rows] = await pool.query(
+      `
+      SELECT id, code, number, name
+      FROM wifi_numbers
+      WHERE LOWER(code) LIKE ?
+         OR LOWER(number) LIKE ?
+         OR LOWER(name) LIKE ?
+      ORDER BY name, number
+      LIMIT 200
+    `,
+      [like, like, like]
+    );
+    return rows;
+  },
+
+  // ==========================
   // INVOICES
   // ==========================
 

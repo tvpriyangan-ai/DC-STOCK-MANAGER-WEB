@@ -29,6 +29,12 @@ function applyRolePermissions() {
   ['addBtn', 'updateBtn', 'deleteBtn', 'usersBtn', 'customerBillBtn'].forEach((id) => {
     document.getElementById(id).style.display = isAdmin ? '' : 'none';
   });
+
+  // Wifi Numbers: Admin, plus the specific user "thanusi", even though
+  // thanusi is a regular User role - everyone else stays hidden from it.
+  const username = (currentUser.username || '').trim().toLowerCase();
+  const canSeeWifi = isAdmin || username === 'thanusi';
+  document.getElementById('wifiBtn').style.display = canSeeWifi ? '' : 'none';
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -42,6 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initUsersModal();
   initUserFormModal();
   initCustomerBillModal();
+  initWifiModal();
   initInvoiceModal();
 
   loadDashboardCounts();
@@ -660,6 +667,65 @@ async function searchCustomerBills(keyword) {
     rows.forEach((r) => {
       const tr = document.createElement('tr');
       tr.innerHTML = `<td>${escapeHtml(r.customer_name)}</td><td>${formatBillDate(r.bill_date)}</td>`;
+      tbody.appendChild(tr);
+    });
+    total.textContent = `${rows.length} Result(s)`;
+  } catch (err) {
+    total.textContent = 'Search error: ' + err.message;
+  }
+}
+
+// ================= WIFI NUMBERS MODAL =================
+
+function initWifiModal() {
+  const overlay = document.getElementById('wifiModal');
+  document.getElementById('wifiCloseBtn').addEventListener('click', () => overlay.classList.remove('open'));
+
+  const search = document.getElementById('wifiSearch');
+  let timer;
+  search.addEventListener('input', () => {
+    clearTimeout(timer);
+    timer = setTimeout(() => searchWifiNumbers(search.value.trim()), 300);
+  });
+
+  document.getElementById('wifiBtn').addEventListener('click', openWifiModal);
+}
+
+function openWifiModal() {
+  document.getElementById('wifiSearch').value = '';
+  document.getElementById('wifiTableBody').innerHTML = '';
+  document.getElementById('wifiEmptyState').style.display = 'none';
+  document.getElementById('wifiTotal').textContent = 'Type a code, number or name to search.';
+  document.getElementById('wifiModal').classList.add('open');
+  document.getElementById('wifiSearch').focus();
+}
+
+async function searchWifiNumbers(keyword) {
+  const tbody = document.getElementById('wifiTableBody');
+  const empty = document.getElementById('wifiEmptyState');
+  const total = document.getElementById('wifiTotal');
+
+  if (!keyword) {
+    tbody.innerHTML = '';
+    empty.style.display = 'none';
+    total.textContent = 'Type a code, number or name to search.';
+    return;
+  }
+
+  try {
+    const rows = await API.get('/wifi-numbers/search?q=' + encodeURIComponent(keyword));
+    tbody.innerHTML = '';
+
+    if (rows.length === 0) {
+      empty.style.display = 'block';
+      total.textContent = '';
+      return;
+    }
+    empty.style.display = 'none';
+
+    rows.forEach((r) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${escapeHtml(r.code || '—')}</td><td>${escapeHtml(r.number || '—')}</td><td>${escapeHtml(r.name || '—')}</td>`;
       tbody.appendChild(tr);
     });
     total.textContent = `${rows.length} Result(s)`;

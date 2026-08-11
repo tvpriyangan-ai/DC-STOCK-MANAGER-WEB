@@ -15,6 +15,7 @@ const activityRoutes = require('./routes/activity');
 const imageRoutes = require('./routes/images');
 const customerBillsRoutes = require('./routes/customerBills');
 const invoiceRoutes = require('./routes/invoices');
+const wifiNumbersRoutes = require('./routes/wifiNumbers');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -36,6 +37,7 @@ app.use('/api/activity', activityRoutes);
 app.use('/api/images', imageRoutes);
 app.use('/api/customer-bills', customerBillsRoutes);
 app.use('/api/invoices', invoiceRoutes);
+app.use('/api/wifi-numbers', wifiNumbersRoutes);
 
 app.listen(PORT, () => {
   console.log(`DC STOCK MANAGER running at http://localhost:${PORT}`);
