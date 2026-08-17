@@ -18,4 +18,25 @@ router.get("/search", async (req, res) => {
   }
 });
 
+// POST /api/customer-bills - Admin only (whole router is gated above).
+router.post("/", async (req, res) => {
+  const { customer_name, bill_date } = req.body;
+
+  if (!customer_name || !customer_name.trim()) {
+    return res.status(400).json({ error: "Please enter Customer Name." });
+  }
+  if (!bill_date) {
+    return res.status(400).json({ error: "Please select a Bill Date." });
+  }
+
+  try {
+    const id = await db.addCustomerBill({ customer_name: customer_name.trim(), bill_date });
+    await db.logActivity(req.user.username, `Added Customer Bill : ${customer_name.trim()}`);
+    res.status(201).json({ id, customer_name: customer_name.trim(), bill_date });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Something went wrong. Please try again." });
+  }
+});
+
 module.exports = router;

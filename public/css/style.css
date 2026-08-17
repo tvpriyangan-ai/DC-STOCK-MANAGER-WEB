@@ -24,11 +24,16 @@
 
 * { box-sizing: border-box; }
 
+html, body {
+  overflow-x: hidden;
+}
+
 body {
   margin: 0;
   font-family: "Segoe UI", Arial, sans-serif;
   background: var(--bg);
   color: var(--white);
+  width: 100%;
 }
 
 button { font-family: inherit; }
@@ -923,6 +928,7 @@ button { font-family: inherit; }
 
 @media (max-width: 900px) {
   .table-detail-layout { flex-direction: column; }
+  .table-wrap { width: 100%; }
   .detail-panel { width: 100%; }
   .card-grid { grid-template-columns: repeat(2, 1fr); }
 }
@@ -930,7 +936,12 @@ button { font-family: inherit; }
 @media (max-width: 720px) {
   .menu-toggle { display: inline-block; }
 
-  .header-title { font-size: 15px; }
+  .app-header { gap: 6px; padding: 0 8px; }
+  .header-logo { width: 32px; height: 32px; }
+  .header-title { font-size: 14px; }
+
+  .header-actions { gap: 4px; }
+  .header-actions .btn { padding: 6px 8px; font-size: 11px; }
 
   .sidebar {
     position: fixed;
@@ -963,4 +974,21 @@ button { font-family: inherit; }
 @media (max-width: 480px) {
   .card-grid { grid-template-columns: 1fr 1fr; }
   .toolbar .btn { flex: 1 1 calc(50% - 8px); font-size: 12px; padding: 10px 8px; }
+
+  .header-title { font-size: 12px; }
+  .header-actions .btn-label { display: none; }
+  .header-actions .btn { padding: 8px; font-size: 16px; line-height: 1; }
+
+  /* Drop the least-critical columns so the main product table fits
+     without a horizontal scroll — full details are still one tap
+     away in the detail panel. */
+  .main-product-table { min-width: 0; }
+  .main-product-table th:nth-child(1),
+  .main-product-table td:nth-child(1),
+  .main-product-table th:nth-child(4),
+  .main-product-table td:nth-child(4),
+  .main-product-table th:nth-child(7),
+  .main-product-table td:nth-child(7) {
+    display: none;
+  }
 }

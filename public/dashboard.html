@@ -15,11 +15,12 @@
     <img src="images/logo_v2.jpeg" alt="" class="header-logo" onerror="this.style.display='none'">
     <h1 class="header-title">DC STOCK MANAGER</h1>
     <div class="header-actions">
-      <button id="invoiceBtn" class="btn btn-cyan btn-sm">🧾 Invoice</button>
-      <button id="customerBillBtn" class="btn btn-purple btn-sm">🧾 Customer Bill</button>
-      <button id="wifiBtn" class="btn btn-teal btn-sm">📶 Wifi Numbers</button>
-      <button id="usersBtn" class="btn btn-green btn-sm">👥 Users</button>
-      <button id="logoutBtn" class="btn btn-red btn-sm">Logout</button>
+      <button id="invoiceBtn" class="btn btn-cyan btn-sm" title="Invoice"><span class="btn-icon">🧾</span><span class="btn-label"> Invoice</span></button>
+      <button id="invoiceHistoryBtn" class="btn btn-orange btn-sm" title="Invoice History"><span class="btn-icon">📜</span><span class="btn-label"> Invoice History</span></button>
+      <button id="customerBillBtn" class="btn btn-purple btn-sm" title="Customer Bill"><span class="btn-icon">🧾</span><span class="btn-label"> Customer Bill</span></button>
+      <button id="wifiBtn" class="btn btn-teal btn-sm" title="Wifi Numbers"><span class="btn-icon">📶</span><span class="btn-label"> Wifi Numbers</span></button>
+      <button id="usersBtn" class="btn btn-green btn-sm" title="Users"><span class="btn-icon">👥</span><span class="btn-label"> Users</span></button>
+      <button id="logoutBtn" class="btn btn-red btn-sm" title="Logout"><span class="btn-icon">🚪</span><span class="btn-label"> Logout</span></button>
     </div>
   </header>
 
@@ -99,7 +100,7 @@
 
         <!-- Product table -->
         <div class="table-wrap">
-          <table class="product-table">
+          <table class="product-table main-product-table">
             <thead>
               <tr>
                 <th>ID</th>
@@ -313,6 +314,9 @@
         <h3>🧾 CUSTOMER BILL</h3>
         <button class="btn btn-red btn-sm" id="customerBillCloseBtn">❌ Close</button>
       </div>
+      <div class="toolbar">
+        <button class="btn btn-green btn-sm" id="customerBillAddBtn">➕ Add New Bill</button>
+      </div>
       <input type="search" id="customerBillSearch" class="search-input" placeholder="🔍 Search by customer name or date (e.g. 6/21/2023)...">
       <div class="table-wrap">
         <table class="product-table">
@@ -327,12 +331,36 @@
     </div>
   </div>
 
+  <!-- ===================== ADD CUSTOMER BILL MODAL ===================== -->
+  <div id="customerBillFormModal" class="modal-overlay">
+    <div class="modal modal-narrow">
+      <h3>➕ ADD CUSTOMER BILL</h3>
+      <form id="customerBillForm">
+        <label>Customer Name</label>
+        <input type="text" id="cbCustomerName" required>
+
+        <label>Bill Date</label>
+        <input type="date" id="cbBillDate" required>
+
+        <p id="customerBillFormError" class="error-text"></p>
+
+        <div class="modal-actions">
+          <button type="submit" class="btn btn-green">💾 Save</button>
+          <button type="button" class="btn btn-gray" id="customerBillFormCancelBtn">❌ Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- ===================== WIFI NUMBERS MODAL ===================== -->
   <div id="wifiModal" class="modal-overlay">
     <div class="modal modal-wide">
       <div class="modal-header-row">
         <h3>📶 WIFI NUMBERS</h3>
         <button class="btn btn-red btn-sm" id="wifiCloseBtn">❌ Close</button>
+      </div>
+      <div class="toolbar">
+        <button class="btn btn-green btn-sm" id="wifiAddBtn">➕ Add Wifi Number</button>
       </div>
       <input type="search" id="wifiSearch" class="search-input" placeholder="🔍 Search by code, number or name...">
       <div class="table-wrap">
@@ -345,6 +373,51 @@
         <p id="wifiEmptyState" class="empty-state" style="display:none;">No matching wifi numbers found.</p>
       </div>
       <p id="wifiTotal" class="status-bar"></p>
+    </div>
+  </div>
+
+  <!-- ===================== ADD WIFI NUMBER MODAL ===================== -->
+  <div id="wifiFormModal" class="modal-overlay">
+    <div class="modal modal-narrow">
+      <h3>➕ ADD WIFI NUMBER</h3>
+      <form id="wifiForm">
+        <label>Code</label>
+        <input type="text" id="wifiCode" required>
+
+        <label>Number</label>
+        <input type="text" id="wifiNumber" required>
+
+        <label>Name</label>
+        <input type="text" id="wifiName" required>
+
+        <p id="wifiFormError" class="error-text"></p>
+
+        <div class="modal-actions">
+          <button type="submit" class="btn btn-green">💾 Save</button>
+          <button type="button" class="btn btn-gray" id="wifiFormCancelBtn">❌ Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===================== INVOICE HISTORY MODAL ===================== -->
+  <div id="invoiceHistoryModal" class="modal-overlay">
+    <div class="modal modal-wide">
+      <div class="modal-header-row">
+        <h3>📜 INVOICE HISTORY</h3>
+        <button class="btn btn-red btn-sm" id="invoiceHistoryCloseBtn">❌ Close</button>
+      </div>
+      <input type="search" id="invoiceHistorySearch" class="search-input" placeholder="🔍 Search by customer name or mobile...">
+      <div class="table-wrap">
+        <table class="product-table">
+          <thead>
+            <tr><th>Invoice #</th><th>Customer</th><th>Mobile</th><th>Date</th><th>Final Amount</th><th>Balance Due</th><th>Created By</th></tr>
+          </thead>
+          <tbody id="invoiceHistoryTableBody"></tbody>
+        </table>
+        <p id="invoiceHistoryEmptyState" class="empty-state" style="display:none;">No invoices found.</p>
+      </div>
+      <p id="invoiceHistoryTotal" class="status-bar"></p>
     </div>
   </div>
 

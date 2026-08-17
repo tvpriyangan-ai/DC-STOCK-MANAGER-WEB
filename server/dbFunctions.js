@@ -246,6 +246,14 @@ const DatabaseFunctions = {
     return rows;
   },
 
+  async addCustomerBill({ customer_name, bill_date }) {
+    const [result] = await pool.query(
+      `INSERT INTO customer_bills (customer_name, bill_date) VALUES (?, ?)`,
+      [customer_name, bill_date]
+    );
+    return result.insertId;
+  },
+
   // ==========================
   // WIFI NUMBERS
   // ==========================
@@ -269,9 +277,48 @@ const DatabaseFunctions = {
     return rows;
   },
 
+  async addWifiNumber({ code, number, name }) {
+    const [result] = await pool.query(
+      `INSERT INTO wifi_numbers (code, number, name) VALUES (?, ?, ?)`,
+      [code, number, name]
+    );
+    return result.insertId;
+  },
+
   // ==========================
   // INVOICES
   // ==========================
+
+  // Powers the "Invoice History" button (Admin only) - lists saved
+  // invoice headers, optionally filtered by customer name/mobile.
+  async getAllInvoices(keyword) {
+    let sql = `
+      SELECT id, customer_name, customer_mobile, invoice_date, final_amount,
+             balance_due, created_by, created_at
+      FROM invoices
+    `;
+    const params = [];
+    if (keyword) {
+      const like = `%${keyword}%`;
+      sql += ` WHERE customer_name LIKE ? OR customer_mobile LIKE ? `;
+      params.push(like, like);
+    }
+    sql += ` ORDER BY id DESC LIMIT 500`;
+    const [rows] = await pool.query(sql, params);
+    return rows;
+  },
+
+  async getInvoiceById(id) {
+    const [headerRows] = await pool.query(`SELECT * FROM invoices WHERE id=?`, [id]);
+    const header = headerRows[0];
+    if (!header) return null;
+    const [items] = await pool.query(
+      `SELECT product_id, item_name, warranty, quantity, unit_price, line_total
+       FROM invoice_items WHERE invoice_id=?`,
+      [id]
+    );
+    return { ...header, items };
+  },
 
   // Inserts the invoice header + line items in one transaction and logs
   // the activity. Does not touch product.stock_count - the Invoice button

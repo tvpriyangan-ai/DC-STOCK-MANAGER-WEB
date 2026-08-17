@@ -26,7 +26,7 @@ let selectedUserId = null;
 // buttons regular staff can't use out of their way.
 function applyRolePermissions() {
   const isAdmin = (currentUser.role || '').trim().toLowerCase() === 'admin';
-  ['addBtn', 'updateBtn', 'deleteBtn', 'usersBtn', 'customerBillBtn'].forEach((id) => {
+  ['addBtn', 'updateBtn', 'deleteBtn', 'usersBtn', 'customerBillBtn', 'invoiceHistoryBtn'].forEach((id) => {
     document.getElementById(id).style.display = isAdmin ? '' : 'none';
   });
 
@@ -48,8 +48,11 @@ document.addEventListener('DOMContentLoaded', () => {
   initUsersModal();
   initUserFormModal();
   initCustomerBillModal();
+  initCustomerBillFormModal();
   initWifiModal();
+  initWifiFormModal();
   initInvoiceModal();
+  initInvoiceHistoryModal();
 
   loadDashboardCounts();
   loadProducts();
@@ -675,6 +678,43 @@ async function searchCustomerBills(keyword) {
   }
 }
 
+// ================= ADD CUSTOMER BILL MODAL =================
+
+function initCustomerBillFormModal() {
+  const overlay = document.getElementById('customerBillFormModal');
+  const form = document.getElementById('customerBillForm');
+  document.getElementById('customerBillFormCancelBtn').addEventListener('click', () => overlay.classList.remove('open'));
+  document.getElementById('customerBillAddBtn').addEventListener('click', openCustomerBillFormModal);
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const errorText = document.getElementById('customerBillFormError');
+    errorText.textContent = '';
+
+    const payload = {
+      customer_name: document.getElementById('cbCustomerName').value.trim(),
+      bill_date: document.getElementById('cbBillDate').value
+    };
+
+    try {
+      await API.post('/customer-bills', payload);
+      overlay.classList.remove('open');
+      document.getElementById('customerBillSearch').value = payload.customer_name;
+      await searchCustomerBills(payload.customer_name);
+      setStatus('Customer bill added successfully.');
+    } catch (err) {
+      errorText.textContent = err.message;
+    }
+  });
+}
+
+function openCustomerBillFormModal() {
+  document.getElementById('customerBillForm').reset();
+  document.getElementById('cbBillDate').value = new Date().toISOString().slice(0, 10);
+  document.getElementById('customerBillFormError').textContent = '';
+  document.getElementById('customerBillFormModal').classList.add('open');
+}
+
 // ================= WIFI NUMBERS MODAL =================
 
 function initWifiModal() {
@@ -696,6 +736,12 @@ function openWifiModal() {
   document.getElementById('wifiTableBody').innerHTML = '';
   document.getElementById('wifiEmptyState').style.display = 'none';
   document.getElementById('wifiTotal').textContent = 'Type a code, number or name to search.';
+
+  // Adding wifi numbers is Admin only, even though thanusi can also
+  // search this modal - see requireAdmin on POST /api/wifi-numbers.
+  const isAdmin = (currentUser.role || '').trim().toLowerCase() === 'admin';
+  document.getElementById('wifiAddBtn').style.display = isAdmin ? '' : 'none';
+
   document.getElementById('wifiModal').classList.add('open');
   document.getElementById('wifiSearch').focus();
 }
@@ -732,6 +778,43 @@ async function searchWifiNumbers(keyword) {
   } catch (err) {
     total.textContent = 'Search error: ' + err.message;
   }
+}
+
+// ================= ADD WIFI NUMBER MODAL =================
+
+function initWifiFormModal() {
+  const overlay = document.getElementById('wifiFormModal');
+  const form = document.getElementById('wifiForm');
+  document.getElementById('wifiFormCancelBtn').addEventListener('click', () => overlay.classList.remove('open'));
+  document.getElementById('wifiAddBtn').addEventListener('click', openWifiFormModal);
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const errorText = document.getElementById('wifiFormError');
+    errorText.textContent = '';
+
+    const payload = {
+      code: document.getElementById('wifiCode').value.trim(),
+      number: document.getElementById('wifiNumber').value.trim(),
+      name: document.getElementById('wifiName').value.trim()
+    };
+
+    try {
+      await API.post('/wifi-numbers', payload);
+      overlay.classList.remove('open');
+      document.getElementById('wifiSearch').value = payload.name;
+      await searchWifiNumbers(payload.name);
+      setStatus('Wifi number added successfully.');
+    } catch (err) {
+      errorText.textContent = err.message;
+    }
+  });
+}
+
+function openWifiFormModal() {
+  document.getElementById('wifiForm').reset();
+  document.getElementById('wifiFormError').textContent = '';
+  document.getElementById('wifiFormModal').classList.add('open');
 }
 
 // ================= INVOICE MODAL =================
@@ -1029,5 +1112,104 @@ async function downloadInvoiceImage() {
   } finally {
     btn.disabled = false;
     btn.textContent = originalText;
+  }
+}
+
+// ================= INVOICE HISTORY MODAL (Admin only) =================
+
+function initInvoiceHistoryModal() {
+  const overlay = document.getElementById('invoiceHistoryModal');
+  document.getElementById('invoiceHistoryCloseBtn').addEventListener('click', () => overlay.classList.remove('open'));
+  document.getElementById('invoiceHistoryBtn').addEventListener('click', openInvoiceHistoryModal);
+
+  const search = document.getElementById('invoiceHistorySearch');
+  let timer;
+  search.addEventListener('input', () => {
+    clearTimeout(timer);
+    timer = setTimeout(() => loadInvoiceHistory(search.value.trim()), 300);
+  });
+
+  document.getElementById('invoiceHistoryTableBody').addEventListener('click', (e) => {
+    const tr = e.target.closest('tr');
+    if (!tr) return;
+    openInvoiceForViewing(Number(tr.dataset.id));
+  });
+}
+
+function openInvoiceHistoryModal() {
+  document.getElementById('invoiceHistorySearch').value = '';
+  document.getElementById('invoiceHistoryModal').classList.add('open');
+  loadInvoiceHistory('');
+}
+
+async function loadInvoiceHistory(keyword) {
+  const tbody = document.getElementById('invoiceHistoryTableBody');
+  const empty = document.getElementById('invoiceHistoryEmptyState');
+  const total = document.getElementById('invoiceHistoryTotal');
+
+  try {
+    const query = keyword ? `?q=${encodeURIComponent(keyword)}` : '';
+    const rows = await API.get('/invoices' + query);
+    tbody.innerHTML = '';
+
+    if (rows.length === 0) {
+      empty.style.display = 'block';
+      total.textContent = '';
+      return;
+    }
+    empty.style.display = 'none';
+
+    rows.forEach((r) => {
+      const tr = document.createElement('tr');
+      tr.dataset.id = r.id;
+      tr.innerHTML = `
+        <td>INV-${String(r.id).padStart(6, '0')}</td>
+        <td>${escapeHtml(r.customer_name)}</td>
+        <td>${escapeHtml(r.customer_mobile)}</td>
+        <td>${formatBillDate(String(r.invoice_date).slice(0, 10))}</td>
+        <td>${formatRs(r.final_amount)}</td>
+        <td>${formatRs(r.balance_due)}</td>
+        <td>${escapeHtml(r.created_by)}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+    total.textContent = `${rows.length} Invoice(s) — tap a row to view`;
+  } catch (err) {
+    total.textContent = 'Error: ' + err.message;
+  }
+}
+
+async function openInvoiceForViewing(id) {
+  try {
+    const invoice = await API.get('/invoices/' + id);
+    resetInvoiceForm();
+
+    document.getElementById('invCustomerName').value = invoice.customer_name;
+    document.getElementById('invCustomerMobile').value = invoice.customer_mobile;
+    document.getElementById('invCustomerAddress').value = invoice.customer_address;
+    document.getElementById('invDate').value = String(invoice.invoice_date).slice(0, 10);
+    document.getElementById('invDiscount').value = invoice.discount;
+    document.getElementById('invAdvance').value = invoice.advance_paid;
+
+    invoiceItems = invoice.items.map((it) => {
+      invoiceRowCounter += 1;
+      return {
+        rowId: invoiceRowCounter,
+        product_id: it.product_id,
+        item_name: it.item_name,
+        warranty: it.warranty || '',
+        quantity: it.quantity,
+        unit_price: it.unit_price
+      };
+    });
+
+    renderInvoiceItems();
+    recalcInvoiceTotals();
+    enterInvoiceSavedMode(invoice);
+
+    document.getElementById('invoiceHistoryModal').classList.remove('open');
+    document.getElementById('invoiceModal').classList.add('open');
+  } catch (err) {
+    alert(err.message);
   }
 }

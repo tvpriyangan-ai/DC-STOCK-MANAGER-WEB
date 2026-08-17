@@ -18,13 +18,19 @@ router.post('/login', async (req, res) => {
   }
 
   try {
+    // TEMP DIAGNOSTIC - logs only lengths/booleans, never the actual password. Remove once login issue is found.
+    console.log('LOGIN DEBUG: username=%j (len %d), password length=%d', username.trim(), username.trim().length, password.trim().length);
+
     const [rows] = await pool.query(
       `SELECT username, password, role, full_name FROM users
        WHERE username = ? AND status = 'Active'`,
       [username.trim()]
     );
     const user = rows[0];
+    console.log('LOGIN DEBUG: matching active user found in DB?', !!user);
+
     const passwordMatches = user ? await bcrypt.compare(password.trim(), user.password) : false;
+    console.log('LOGIN DEBUG: password matches?', passwordMatches);
 
     if (!passwordMatches) {
       return res.status(401).json({ error: 'Invalid Username or Password.' });

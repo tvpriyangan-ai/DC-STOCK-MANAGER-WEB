@@ -2,7 +2,10 @@
 // as a PWA. Data always comes fresh from the network (no offline
 // caching of inventory data, since stock counts must stay accurate).
 
-const CACHE_NAME = "dc-stock-shell-v1";
+// Bump this version whenever any file in SHELL_FILES changes - it's what
+// forces phones/tablets with the app "installed" to drop old cached JS
+// (e.g. the pre-token-auth api.js) instead of silently keeping it forever.
+const CACHE_NAME = "dc-stock-shell-v2";
 const SHELL_FILES = ["css/style.css", "js/api.js", "logo.jpeg"];
 
 self.addEventListener("install", (event) => {
@@ -13,6 +16,11 @@ self.addEventListener("install", (event) => {
 });
 
 self.addEventListener("activate", (event) => {
+  event.waitUntil(
+    caches.keys().then((names) =>
+      Promise.all(names.filter((n) => n !== CACHE_NAME).map((n) => caches.delete(n)))
+    )
+  );
   self.clients.claim();
 });
 
