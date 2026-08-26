@@ -931,6 +931,17 @@ button { font-family: inherit; }
   .table-wrap { width: 100%; }
   .detail-panel { width: 100%; }
   .card-grid { grid-template-columns: repeat(2, 1fr); }
+
+  /* Invoice items: on anything narrower than a desktop, keep only
+     QTY, ITEM NAME, TOTAL so the table fits without a horizontal
+     scroll — full details (warranty, unit price) stay web-only. */
+  .invoice-items-table { min-width: 0; }
+  .invoice-items-table th:nth-child(3),
+  .invoice-items-table td:nth-child(3),
+  .invoice-items-table th:nth-child(4),
+  .invoice-items-table td:nth-child(4) {
+    display: none;
+  }
 }
 
 @media (max-width: 720px) {
