@@ -803,20 +803,34 @@ button { font-family: inherit; }
 
 .invoice-items-table th:nth-child(1),
 .invoice-items-table td:nth-child(1) {
-  width: 55px;
+  width: 65px;
 }
 .invoice-items-table input[data-field="quantity"] {
-  width: 3ch;
+  width: 4ch;
   text-align: center;
 }
 
 .invoice-items-table th:nth-child(2),
 .invoice-items-table td:nth-child(2) {
-  width: 40%;
+  width: 46%;
 }
 .invoice-items-table input[data-field="item_name"] {
   width: 100%;
   min-width: 140px;
+}
+
+.invoice-items-table th:nth-child(3),
+.invoice-items-table td:nth-child(3) {
+  width: 15%;
+}
+.invoice-items-table th:nth-child(4),
+.invoice-items-table td:nth-child(4) {
+  width: 15%;
+}
+.invoice-items-table input[data-field="warranty"],
+.invoice-items-table input[data-field="unit_price"] {
+  width: 100%;
+  min-width: 70px;
 }
 
 .invoice-row-total { font-weight: bold; white-space: nowrap; }
