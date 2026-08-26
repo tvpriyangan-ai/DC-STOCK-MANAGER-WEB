@@ -801,6 +801,24 @@ button { font-family: inherit; }
   font-size: 13px;
 }
 
+.invoice-items-table th:nth-child(1),
+.invoice-items-table td:nth-child(1) {
+  width: 55px;
+}
+.invoice-items-table input[data-field="quantity"] {
+  width: 3ch;
+  text-align: center;
+}
+
+.invoice-items-table th:nth-child(2),
+.invoice-items-table td:nth-child(2) {
+  width: 40%;
+}
+.invoice-items-table input[data-field="item_name"] {
+  width: 100%;
+  min-width: 140px;
+}
+
 .invoice-row-total { font-weight: bold; white-space: nowrap; }
 
 .invoice-row-remove {
