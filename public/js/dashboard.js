@@ -126,12 +126,39 @@ async function loadDashboardCounts() {
 async function loadProducts() {
   try {
     const query = currentCategory === 'All Products' ? '' : `?category=${encodeURIComponent(currentCategory)}`;
-    allProducts = await API.get('/products' + query);
+    allProducts = sortForDisplay(await API.get('/products' + query));
     renderProductTable(allProducts);
     setStatus(currentCategory === 'All Products' ? 'All Products Loaded' : `Filtered: ${currentCategory}`);
   } catch (err) {
     setStatus('Error loading products: ' + err.message);
   }
+}
+
+// CCTV items are grouped in this order: DVR, 20M cameras, 40M cameras,
+// Rotation cameras, Wifi cameras, then everything else alphabetically.
+// Other categories are left in their existing (server-sorted) order.
+const CCTV_GROUP_MATCHERS = [
+  /\bdvr\b/i,
+  /\b20m\b/i,
+  /\b40m\b/i,
+  /rotation/i,
+  /wifi/i,
+];
+
+function cctvGroupRank(productName) {
+  const idx = CCTV_GROUP_MATCHERS.findIndex((re) => re.test(productName));
+  return idx === -1 ? CCTV_GROUP_MATCHERS.length : idx;
+}
+
+function sortForDisplay(rows) {
+  return [...rows].sort((a, b) => {
+    if (a.category === 'CCTV' && b.category === 'CCTV') {
+      const rankDiff = cctvGroupRank(a.product_name) - cctvGroupRank(b.product_name);
+      if (rankDiff !== 0) return rankDiff;
+      return a.product_name.localeCompare(b.product_name);
+    }
+    return 0;
+  });
 }
 
 function renderProductTable(rows) {
