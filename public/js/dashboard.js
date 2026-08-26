@@ -134,26 +134,37 @@ async function loadProducts() {
   }
 }
 
-// CCTV items are grouped in this order: DVR, 20M cameras, 40M cameras,
-// Rotation cameras, Wifi cameras, then everything else alphabetically.
-// Other categories are left in their existing (server-sorted) order.
-const CCTV_GROUP_MATCHERS = [
-  /\bdvr\b/i,
-  /\b20m\b/i,
-  /\b40m\b/i,
-  /rotation/i,
-  /wifi/i,
-];
+// Some categories get a custom item order instead of plain alphabetical.
+// Each entry is checked in order against the product name; unmatched
+// items fall into a final "others" group (alphabetical). Categories not
+// listed here are left in their existing (server-sorted) order.
+const CATEGORY_GROUP_MATCHERS = {
+  CCTV: [
+    /\bdvr\b/i,
+    /\b20m\b/i,
+    /\b40m\b/i,
+    /rotation/i,
+    /wifi/i,
+  ],
+  Cables: [
+    /cat\s*6/i,
+    /3c2v/i,
+    /\btt\b/i,
+    /1\.4/i,
+  ],
+};
 
-function cctvGroupRank(productName) {
-  const idx = CCTV_GROUP_MATCHERS.findIndex((re) => re.test(productName));
-  return idx === -1 ? CCTV_GROUP_MATCHERS.length : idx;
+function categoryGroupRank(category, productName) {
+  const matchers = CATEGORY_GROUP_MATCHERS[category];
+  if (!matchers) return -1;
+  const idx = matchers.findIndex((re) => re.test(productName));
+  return idx === -1 ? matchers.length : idx;
 }
 
 function sortForDisplay(rows) {
   return [...rows].sort((a, b) => {
-    if (a.category === 'CCTV' && b.category === 'CCTV') {
-      const rankDiff = cctvGroupRank(a.product_name) - cctvGroupRank(b.product_name);
+    if (a.category === b.category && CATEGORY_GROUP_MATCHERS[a.category]) {
+      const rankDiff = categoryGroupRank(a.category, a.product_name) - categoryGroupRank(b.category, b.product_name);
       if (rankDiff !== 0) return rankDiff;
       return a.product_name.localeCompare(b.product_name);
     }
