@@ -1021,6 +1021,16 @@ button {
   color: #14203a;
   border-radius: 4px;
 }
+/* Kill the number-input spin buttons so the digits get the full box width. */
+.inv-items-table input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+.inv-items-table input[type="number"]::-webkit-outer-spin-button,
+.inv-items-table input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
 /* While the invoice is still editable the cells read as input fields;
    once saved they are disabled and render clean/borderless for the JPEG. */
 .inv-items-table input:not(:disabled) {
@@ -1045,7 +1055,7 @@ button {
   color: #5b6b85;
 }
 .inv-items-table .c-war {
-  width: 92px;
+  width: 84px;
   white-space: nowrap;
 }
 .inv-items-table td.c-war {
@@ -1074,19 +1084,26 @@ button {
   font-weight: 700;
 }
 .inv-items-table .c-qty {
-  width: 100px;
+  width: 112px;
 }
 .inv-items-table .c-qty input {
   text-align: center;
-  padding-left: 6px;
-  padding-right: 6px;
+  padding-left: 4px;
+  padding-right: 4px;
+  font-size: 13px;
+  font-weight: 700;
   letter-spacing: 0.5px;
 }
 .inv-items-table .c-unit {
-  width: 108px;
+  width: 100px;
 }
 .inv-items-table .c-unit input {
   text-align: right;
+  padding-left: 2px;
+  padding-right: 4px;
+}
+.inv-items-table th.c-unit {
+  white-space: nowrap;
 }
 .inv-items-table .c-tot {
   width: 108px;
