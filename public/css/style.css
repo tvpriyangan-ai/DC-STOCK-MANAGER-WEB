@@ -1046,6 +1046,29 @@ button {
 }
 .inv-items-table .c-war {
   width: 96px;
+  white-space: nowrap;
+}
+.inv-items-table td.c-war {
+  text-align: left;
+}
+.inv-items-table .c-war input {
+  width: 40px;
+  text-align: center;
+  padding-left: 2px;
+  padding-right: 2px;
+}
+.inv-war-unit {
+  font-size: 11px;
+  color: #5b6b85;
+  margin-left: 5px;
+}
+.inv-items-table td.c-war.is-nw input {
+  display: none;
+}
+.inv-items-table td.c-war.is-nw .inv-war-unit {
+  margin-left: 0;
+  font-weight: 700;
+  color: #b23b3b;
 }
 .inv-items-table .c-qty {
   width: 54px;

@@ -862,11 +862,22 @@ let invoiceRowCounter = 0;
 let invoiceSaved = false;
 let currentInvoiceId = null;
 
+// These two lines always sit at the bottom of every new invoice. The user
+// fills in the quantity / unit price by hand; the names are fixed and can't
+// be edited or removed.
+const FIXED_INVOICE_ITEM_NAMES = ['Hardware Materials', 'Installation/Repairing Charges'];
+
 function formatRs(n) {
   return 'Rs ' + Number(n || 0).toLocaleString('en-US', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
   });
+}
+
+// Warranty is picked as a number of years. 0 (or blank) means no warranty.
+function warrantyText(years) {
+  const n = Number(years) || 0;
+  return n > 0 ? n + ' Years' : 'N/W';
 }
 
 function initInvoiceModal() {
@@ -915,8 +926,14 @@ function initInvoiceModal() {
     if (!item) return;
 
     const field = e.target.dataset.field;
-    if (field === 'item_name' || field === 'warranty') {
-      item[field] = e.target.value;
+    if (field === 'item_name') {
+      item.item_name = e.target.value;
+    } else if (field === 'warranty_years') {
+      item.warranty_years = e.target.value;
+      const cell = tr.querySelector('.c-war');
+      const n = Number(e.target.value) || 0;
+      cell.classList.toggle('is-nw', n <= 0);
+      cell.querySelector('.inv-war-unit').textContent = n > 0 ? 'Years' : 'N/W';
     } else if (field === 'quantity') {
       item.quantity = e.target.value;
     } else if (field === 'unit_price') {
@@ -976,9 +993,26 @@ function resetInvoiceForm() {
   document.getElementById('invDownloadBtn').style.display = 'none';
   document.getElementById('invNewBtn').style.display = 'none';
 
+  appendFixedInvoiceItems();
+
   renderInvoiceItems();
   recalcInvoiceTotals();
   checkInvoiceUnlock();
+}
+
+function appendFixedInvoiceItems() {
+  FIXED_INVOICE_ITEM_NAMES.forEach((name) => {
+    invoiceRowCounter += 1;
+    invoiceItems.push({
+      rowId: invoiceRowCounter,
+      product_id: null,
+      item_name: name,
+      warranty_years: 0,
+      quantity: 1,
+      unit_price: 0,
+      fixed: true
+    });
+  });
 }
 
 function checkInvoiceUnlock() {
@@ -988,10 +1022,13 @@ function checkInvoiceUnlock() {
     document.getElementById('invCustomerAddress').value.trim() &&
     document.getElementById('invDate').value;
 
+  // Something is actually worth invoicing once at least one line has a price.
+  const hasPricedLine = invoiceItems.some((it) => Number(it.unit_price) > 0);
+
   document.getElementById('invoiceLockNotice').style.display = unlocked || invoiceSaved ? 'none' : 'block';
   document.getElementById('invStockSearch').disabled = !unlocked || invoiceSaved;
   document.getElementById('invAddBlankBtn').disabled = !unlocked || invoiceSaved;
-  document.getElementById('invSaveBtn').disabled = !unlocked || invoiceItems.length === 0 || invoiceSaved;
+  document.getElementById('invSaveBtn').disabled = !unlocked || !hasPricedLine || invoiceSaved;
 }
 
 function renderInvoiceItems() {
@@ -1005,17 +1042,25 @@ function renderInvoiceItems() {
   }
   empty.style.display = 'none';
 
-  tbody.innerHTML = invoiceItems.map((it, idx) => `
+  tbody.innerHTML = invoiceItems.map((it, idx) => {
+    const lock = invoiceSaved ? 'disabled' : '';
+    const years = Number(it.warranty_years) || 0;
+    const nameLock = invoiceSaved || it.fixed ? 'disabled' : '';
+    return `
     <tr data-row-id="${it.rowId}">
       <td class="c-no">${idx + 1}</td>
-      <td class="c-desc"><input type="text" data-field="item_name" value="${escapeHtml(it.item_name)}" placeholder="Item description" ${invoiceSaved ? 'disabled' : ''}></td>
-      <td class="c-war"><input type="text" data-field="warranty" value="${escapeHtml(it.warranty)}" placeholder="e.g. 1 Year" ${invoiceSaved ? 'disabled' : ''}></td>
-      <td class="c-qty"><input type="number" min="1" data-field="quantity" value="${it.quantity}" ${invoiceSaved ? 'disabled' : ''}></td>
-      <td class="c-unit"><input type="number" min="0" step="0.01" data-field="unit_price" value="${it.unit_price}" ${invoiceSaved ? 'disabled' : ''}></td>
+      <td class="c-desc"><input type="text" data-field="item_name" value="${escapeHtml(it.item_name)}" placeholder="Item description" ${nameLock}></td>
+      <td class="c-war${years > 0 ? '' : ' is-nw'}">
+        <input type="number" min="0" max="20" step="1" data-field="warranty_years" value="${years}" ${lock}>
+        <span class="inv-war-unit">${years > 0 ? 'Years' : 'N/W'}</span>
+      </td>
+      <td class="c-qty"><input type="number" min="1" data-field="quantity" value="${it.quantity}" ${lock}></td>
+      <td class="c-unit"><input type="number" min="0" step="0.01" data-field="unit_price" value="${it.unit_price}" ${lock}></td>
       <td class="c-tot invoice-row-total">${formatRs((Number(it.quantity) || 0) * (Number(it.unit_price) || 0))}</td>
-      <td class="c-rm no-print">${invoiceSaved ? '' : '<button type="button" class="invoice-row-remove" title="Remove">✕</button>'}</td>
+      <td class="c-rm no-print">${invoiceSaved || it.fixed ? '' : '<button type="button" class="invoice-row-remove" title="Remove">✕</button>'}</td>
     </tr>
-  `).join('');
+  `;
+  }).join('');
 }
 
 function recalcInvoiceTotals() {
@@ -1034,14 +1079,20 @@ function recalcInvoiceTotals() {
 
 function addInvoiceItem(product) {
   invoiceRowCounter += 1;
-  invoiceItems.push({
+  const newItem = {
     rowId: invoiceRowCounter,
     product_id: product ? product.id : null,
     item_name: product ? product.product_name : '',
-    warranty: '',
+    warranty_years: 0,
     quantity: 1,
     unit_price: product ? Number(product.price) : 0
-  });
+  };
+
+  // Keep "Hardware Materials" / "Installation..." pinned to the bottom -
+  // new items go in just above the first fixed line.
+  const firstFixed = invoiceItems.findIndex((it) => it.fixed);
+  if (firstFixed === -1) invoiceItems.push(newItem);
+  else invoiceItems.splice(firstFixed, 0, newItem);
 
   document.getElementById('invStockSearch').value = '';
   document.getElementById('invStockResults').innerHTML = '';
@@ -1051,6 +1102,8 @@ function addInvoiceItem(product) {
 }
 
 function removeInvoiceItem(rowId) {
+  const item = invoiceItems.find((it) => it.rowId === rowId);
+  if (!item || item.fixed) return;
   invoiceItems = invoiceItems.filter((it) => it.rowId !== rowId);
   renderInvoiceItems();
   recalcInvoiceTotals();
@@ -1096,7 +1149,7 @@ async function saveInvoice() {
     items: invoiceItems.map((it) => ({
       product_id: it.product_id,
       item_name: (it.item_name || '').trim(),
-      warranty: it.warranty,
+      warranty: warrantyText(it.warranty_years),
       quantity: Number(it.quantity),
       unit_price: Number(it.unit_price)
     })),
@@ -1250,7 +1303,7 @@ async function openInvoiceForViewing(id) {
         rowId: invoiceRowCounter,
         product_id: it.product_id,
         item_name: it.item_name,
-        warranty: it.warranty || '',
+        warranty_years: parseInt(it.warranty, 10) || 0,
         quantity: it.quantity,
         unit_price: it.unit_price
       };
