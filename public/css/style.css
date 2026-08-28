@@ -1074,7 +1074,7 @@ button {
   font-weight: 700;
 }
 .inv-items-table .c-qty {
-  width: 78px;
+  width: 100px;
 }
 .inv-items-table .c-qty input {
   text-align: center;
