@@ -1045,30 +1045,33 @@ button {
   color: #5b6b85;
 }
 .inv-items-table .c-war {
-  width: 96px;
+  width: 92px;
   white-space: nowrap;
 }
 .inv-items-table td.c-war {
   text-align: left;
 }
-.inv-items-table .c-war input {
-  width: 40px;
-  text-align: center;
-  padding-left: 2px;
-  padding-right: 2px;
+.inv-items-table .c-war select {
+  width: 100%;
+  border: 1px solid #d7deea;
+  background: #fff;
+  border-radius: 4px;
+  padding: 7px 4px;
+  font-size: 11.5px;
+  color: #14203a;
+  cursor: pointer;
 }
-.inv-war-unit {
-  font-size: 11px;
-  color: #5b6b85;
-  margin-left: 5px;
+.inv-items-table .c-war select:focus {
+  outline: none;
+  border-color: #143f96;
 }
-.inv-items-table td.c-war.is-nw input {
-  display: none;
+.inv-war-text {
+  font-size: 12px;
+  color: #14203a;
 }
-.inv-items-table td.c-war.is-nw .inv-war-unit {
-  margin-left: 0;
-  font-weight: 700;
+.inv-war-text.is-nw {
   color: #b23b3b;
+  font-weight: 700;
 }
 .inv-items-table .c-qty {
   width: 54px;

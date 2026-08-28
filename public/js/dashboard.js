@@ -874,10 +874,12 @@ function formatRs(n) {
   });
 }
 
-// Warranty is picked as a number of years. 0 (or blank) means no warranty.
+// Warranty is picked from a short list. 0 means no warranty ("N/W").
+const WARRANTY_OPTIONS = [0, 1, 2, 3];
 function warrantyText(years) {
   const n = Number(years) || 0;
-  return n > 0 ? n + ' Years' : 'N/W';
+  if (n <= 0) return 'N/W';
+  return n + (n === 1 ? ' Year' : ' Years');
 }
 
 function initInvoiceModal() {
@@ -930,10 +932,6 @@ function initInvoiceModal() {
       item.item_name = e.target.value;
     } else if (field === 'warranty_years') {
       item.warranty_years = e.target.value;
-      const cell = tr.querySelector('.c-war');
-      const n = Number(e.target.value) || 0;
-      cell.classList.toggle('is-nw', n <= 0);
-      cell.querySelector('.inv-war-unit').textContent = n > 0 ? 'Years' : 'N/W';
     } else if (field === 'quantity') {
       item.quantity = e.target.value;
     } else if (field === 'unit_price') {
@@ -1046,14 +1044,18 @@ function renderInvoiceItems() {
     const lock = invoiceSaved ? 'disabled' : '';
     const years = Number(it.warranty_years) || 0;
     const nameLock = invoiceSaved || it.fixed ? 'disabled' : '';
+    const warrantyCell = invoiceSaved
+      ? `<span class="inv-war-text${years > 0 ? '' : ' is-nw'}">${warrantyText(years)}</span>`
+      : `<select data-field="warranty_years">` +
+          WARRANTY_OPTIONS.map((y) =>
+            `<option value="${y}"${y === years ? ' selected' : ''}>${warrantyText(y)}</option>`
+          ).join('') +
+        `</select>`;
     return `
     <tr data-row-id="${it.rowId}">
       <td class="c-no">${idx + 1}</td>
       <td class="c-desc"><input type="text" data-field="item_name" value="${escapeHtml(it.item_name)}" placeholder="Item description" ${nameLock}></td>
-      <td class="c-war${years > 0 ? '' : ' is-nw'}">
-        <input type="number" min="0" max="20" step="1" data-field="warranty_years" value="${years}" ${lock}>
-        <span class="inv-war-unit">${years > 0 ? 'Years' : 'N/W'}</span>
-      </td>
+      <td class="c-war">${warrantyCell}</td>
       <td class="c-qty"><input type="number" min="1" data-field="quantity" value="${it.quantity}" ${lock}></td>
       <td class="c-unit"><input type="number" min="0" step="0.01" data-field="unit_price" value="${it.unit_price}" ${lock}></td>
       <td class="c-tot invoice-row-total">${formatRs((Number(it.quantity) || 0) * (Number(it.unit_price) || 0))}</td>
