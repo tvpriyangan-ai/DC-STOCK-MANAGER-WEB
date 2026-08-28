@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Invoice Design Preview — DC Electricals</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    /* Preview-only chrome. Delete this file once the design is approved. */
+    body {
+      background: #33475b;
+      padding: 24px 12px 60px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+    }
+    .preview-note {
+      max-width: 794px;
+      background: #fff;
+      border-left: 4px solid #f5a623;
+      border-radius: 6px;
+      padding: 12px 16px;
+      font: 13px/1.5 system-ui, sans-serif;
+      color: #14203a;
+    }
+    .preview-note strong { color: #0c2340; }
+    /* Show the invoice exactly as the downloaded JPEG will look:
+       hide the on-screen-only controls (.no-print). */
+    .no-print { display: none !important; }
+  </style>
+</head>
+<body>
+
+  <div class="preview-note">
+    <strong>Invoice design preview</strong> — this is how the downloaded JPEG will look (A4 portrait, 794&nbsp;px wide,
+    saved at 2× for print sharpness). Sample data shown. Open <code>/dashboard.html</code> → 🧾 Invoice to use it for real.
+  </div>
+
+  <div class="invoice-doc" id="invoiceDoc">
+
+    <div class="inv-header">
+      <svg class="inv-header-swoosh" viewBox="0 0 794 178" preserveAspectRatio="none" aria-hidden="true">
+        <path class="sw-blue-soft" d="M410 190 C494 128 452 60 574 -12 L680 -12 C592 54 640 126 508 190 Z"/>
+        <path class="sw-blue" d="M332 190 C416 128 374 60 496 -12 L576 -12 C488 54 536 126 420 190 Z"/>
+        <path class="sw-cyan" d="M576 -12 C488 54 536 126 420 190 L432 190 C550 126 502 54 590 -12 Z"/>
+        <path class="sw-gold" d="M256 190 C340 128 298 60 420 -12 L508 -12 C420 54 468 126 352 190 Z"/>
+        <path class="sw-gold-hi" d="M256 190 C340 128 298 60 420 -12 L438 -12 C318 58 360 128 276 190 Z"/>
+      </svg>
+      <div class="inv-header-left">
+        <img src="images/invoicelogo.jpg" alt="DC Electricals" class="inv-logo" onerror="this.style.display='none'">
+        <div class="inv-title-badge">INVOICE</div>
+      </div>
+      <div class="inv-header-right">
+        <div class="inv-slogan">
+          <span class="inv-slogan-main">FULL SECURITY SOLUTIONS</span>
+          <span class="inv-slogan-sub">SINCE 2020</span>
+        </div>
+        <div class="inv-hik-box">
+          <span class="inv-hik-name">HIK<span>VISION</span></span>
+          <span class="inv-hik-tag">AUTHORISED CCTV COMPANY</span>
+        </div>
+        <div class="inv-contact">
+          <div class="inv-contact-name">T.V.Priyangan (Director)</div>
+          <div class="inv-contact-line">📞 076 794 1101</div>
+          <div class="inv-contact-line">✉️ dccctvelectricals@gmail.com</div>
+          <div class="inv-contact-line">📍 Mallavi</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="inv-meta">
+      <div class="inv-meta-cell">
+        <span class="inv-meta-ic">🧾</span>
+        <div class="inv-meta-text">
+          <div class="inv-meta-label">Invoice No.</div>
+          <div class="inv-meta-value">INV-000042</div>
+        </div>
+      </div>
+      <div class="inv-meta-cell">
+        <span class="inv-meta-ic">📅</span>
+        <div class="inv-meta-text">
+          <div class="inv-meta-label">Invoice Date</div>
+          <div class="inv-meta-value">2026-08-28</div>
+        </div>
+      </div>
+      <div class="inv-meta-cell">
+        <span class="inv-meta-ic">🧑</span>
+        <div class="inv-meta-text">
+          <div class="inv-meta-label">Invoice Maker</div>
+          <div class="inv-meta-value">priyangan</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="inv-body">
+
+      <div class="inv-two-col">
+        <div class="inv-panel">
+          <div class="inv-panel-head">👤 BILL TO</div>
+          <div class="inv-panel-body">
+            <div class="inv-row"><span class="inv-row-ic">🧑</span><span class="inv-row-sep">:</span><input type="text" value="S. Kabilan" disabled></div>
+            <div class="inv-row"><span class="inv-row-ic">📞</span><span class="inv-row-sep">:</span><input type="text" value="077 123 4567" disabled></div>
+            <div class="inv-row"><span class="inv-row-ic">📍</span><span class="inv-row-sep">:</span><input type="text" value="No. 42, Temple Road, Mallavi" disabled></div>
+          </div>
+        </div>
+        <div class="inv-panel">
+          <div class="inv-panel-head">🏢 PROJECT / SITE DETAILS</div>
+          <div class="inv-panel-body">
+            <div class="inv-row"><span class="inv-row-lbl">Project Location</span><span class="inv-row-sep">:</span><input type="text" value="Mallavi — Residence" disabled></div>
+            <div class="inv-row"><span class="inv-row-lbl">Installation Type</span><span class="inv-row-sep">:</span><input type="text" value="4-Camera HD CCTV" disabled></div>
+            <div class="inv-row"><span class="inv-row-lbl">Payment Mode</span><span class="inv-row-sep">:</span><input type="text" value="Ready Cash" disabled></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="inv-items">
+        <table class="inv-items-table">
+          <thead>
+            <tr>
+              <th class="c-no">#</th>
+              <th class="c-desc">ITEM DESCRIPTION (HIKVISION)</th>
+              <th class="c-war">WARRANTY</th>
+              <th class="c-qty">QTY</th>
+              <th class="c-unit">UNIT PRICE (Rs)</th>
+              <th class="c-tot">TOTAL (Rs)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="c-no">1</td>
+              <td class="c-desc"><input type="text" value="HIKVISION 2MP Dome Camera DS-2CE76D0T" disabled></td>
+              <td class="c-war"><input type="text" value="2 Years" disabled></td>
+              <td class="c-qty"><input type="number" value="4" disabled></td>
+              <td class="c-unit"><input type="number" value="4500" disabled></td>
+              <td class="c-tot invoice-row-total">Rs 18,000.00</td>
+            </tr>
+            <tr>
+              <td class="c-no">2</td>
+              <td class="c-desc"><input type="text" value="HIKVISION 4CH DVR DS-7204HGHI" disabled></td>
+              <td class="c-war"><input type="text" value="2 Years" disabled></td>
+              <td class="c-qty"><input type="number" value="1" disabled></td>
+              <td class="c-unit"><input type="number" value="9800" disabled></td>
+              <td class="c-tot invoice-row-total">Rs 9,800.00</td>
+            </tr>
+            <tr>
+              <td class="c-no">3</td>
+              <td class="c-desc"><input type="text" value="HIKVISION 1TB Surveillance HDD" disabled></td>
+              <td class="c-war"><input type="text" value="2 Years" disabled></td>
+              <td class="c-qty"><input type="number" value="1" disabled></td>
+              <td class="c-unit"><input type="number" value="12500" disabled></td>
+              <td class="c-tot invoice-row-total">Rs 12,500.00</td>
+            </tr>
+            <tr>
+              <td class="c-no">4</td>
+              <td class="c-desc"><input type="text" value="3+1 CCTV Cable Roll (100 m)" disabled></td>
+              <td class="c-war"><input type="text" value="—" disabled></td>
+              <td class="c-qty"><input type="number" value="2" disabled></td>
+              <td class="c-unit"><input type="number" value="6750" disabled></td>
+              <td class="c-tot invoice-row-total">Rs 13,500.00</td>
+            </tr>
+            <tr>
+              <td class="c-no">5</td>
+              <td class="c-desc"><input type="text" value="12V 5A CCTV Power Supply" disabled></td>
+              <td class="c-war"><input type="text" value="1 Year" disabled></td>
+              <td class="c-qty"><input type="number" value="1" disabled></td>
+              <td class="c-unit"><input type="number" value="2400" disabled></td>
+              <td class="c-tot invoice-row-total">Rs 2,400.00</td>
+            </tr>
+            <tr>
+              <td class="c-no">6</td>
+              <td class="c-desc"><input type="text" value="Installation & Wiring — 4 Camera Setup" disabled></td>
+              <td class="c-war"><input type="text" value="—" disabled></td>
+              <td class="c-qty"><input type="number" value="1" disabled></td>
+              <td class="c-unit"><input type="number" value="8500" disabled></td>
+              <td class="c-tot invoice-row-total">Rs 8,500.00</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="inv-bottom">
+        <div class="inv-panel inv-terms-panel">
+          <div class="inv-panel-head">📋 TERMS &amp; CONDITIONS</div>
+          <ul class="inv-terms">
+            <li>This estimate is valid for 15 days from the invoice date.</li>
+            <li>Prices may change with final material / wiring.</li>
+            <li>Advance payment will be adjusted in final amount.</li>
+            <li>Payment mode: Ready Cash Only.</li>
+            <li>Warranty applicable as per company policy.</li>
+          </ul>
+        </div>
+        <div class="inv-summary">
+          <div class="inv-panel-head">🧮 SUMMARY</div>
+          <div class="inv-summary-body">
+            <div class="inv-sum-line"><span>Subtotal</span><span>Rs 64,700.00</span></div>
+            <div class="inv-sum-line inv-sum-discount"><span>Discount</span><span>Rs 4,950.00</span></div>
+            <div class="inv-sum-line inv-sum-final"><span>Final Amount</span><span>Rs 59,750.00</span></div>
+            <div class="inv-sum-line"><span>Advance Paid</span><span>Rs 5,000.00</span></div>
+          </div>
+          <div class="inv-balance-bar"><span>Balance Due</span><span>Rs 54,750.00</span></div>
+        </div>
+      </div>
+
+      <div class="inv-footer">
+        <div class="inv-sign">
+          <div class="inv-sign-line"></div>
+          <div class="inv-sign-cap">Authorized Signature</div>
+          <div class="inv-sign-name">T.V.PRIYANGAN</div>
+          <div class="inv-sign-role">Director</div>
+        </div>
+        <div class="inv-partner">
+          <span class="inv-hik-name inv-hik-red">HIK<span>VISION</span></span>
+          <span>Authorised CCTV Partner</span>
+        </div>
+        <div class="inv-safety"><span>🛡️</span><span>We use quality materials &amp; provide best security solutions for your safety.</span></div>
+      </div>
+
+    </div>
+  </div>
+
+</body>
+</html>

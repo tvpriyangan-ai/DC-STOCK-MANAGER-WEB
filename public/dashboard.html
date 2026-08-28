@@ -423,67 +423,110 @@
 
   <!-- ===================== INVOICE MODAL ===================== -->
   <div id="invoiceModal" class="modal-overlay">
-    <div class="modal modal-wide invoice-modal">
+    <div class="modal invoice-modal">
       <button type="button" class="btn btn-red btn-sm invoice-close-btn no-print" id="invoiceCloseBtn">❌ Close</button>
 
       <div class="invoice-doc" id="invoiceDoc">
-        <div class="invoice-brand">
-          <img src="images/invoicelogo.jpg" alt="DC Electricals" class="invoice-logo" onerror="this.style.display='none'">
+
+        <!-- ===== HEADER ===== -->
+        <div class="inv-header">
+          <svg class="inv-header-swoosh" viewBox="0 0 794 178" preserveAspectRatio="none" aria-hidden="true">
+            <path class="sw-blue-soft" d="M410 190 C494 128 452 60 574 -12 L680 -12 C592 54 640 126 508 190 Z"/>
+            <path class="sw-blue" d="M332 190 C416 128 374 60 496 -12 L576 -12 C488 54 536 126 420 190 Z"/>
+            <path class="sw-cyan" d="M576 -12 C488 54 536 126 420 190 L432 190 C550 126 502 54 590 -12 Z"/>
+            <path class="sw-gold" d="M256 190 C340 128 298 60 420 -12 L508 -12 C420 54 468 126 352 190 Z"/>
+            <path class="sw-gold-hi" d="M256 190 C340 128 298 60 420 -12 L438 -12 C318 58 360 128 276 190 Z"/>
+          </svg>
+          <div class="inv-header-left">
+            <img src="images/invoicelogo.jpg" alt="DC Electricals" class="inv-logo" onerror="this.style.display='none'">
+            <div class="inv-title-badge">INVOICE</div>
+          </div>
+          <div class="inv-header-right">
+            <div class="inv-slogan">
+              <span class="inv-slogan-main">FULL SECURITY SOLUTIONS</span>
+              <span class="inv-slogan-sub">SINCE 2020</span>
+            </div>
+            <div class="inv-hik-box">
+              <span class="inv-hik-name">HIK<span>VISION</span></span>
+              <span class="inv-hik-tag">AUTHORISED CCTV COMPANY</span>
+            </div>
+            <div class="inv-contact">
+              <div class="inv-contact-name">T.V.Priyangan (Director)</div>
+              <div class="inv-contact-line">📞 076 794 1101 <a class="whatsapp-badge no-print" href="https://wa.me/94767941101" target="_blank" rel="noopener">WHATSAPP</a></div>
+              <div class="inv-contact-line">✉️ dccctvelectricals@gmail.com</div>
+              <div class="inv-contact-line">📍 Mallavi</div>
+            </div>
+          </div>
         </div>
 
-        <div class="invoice-contact-bar">
-          <div class="invoice-tagline-block">
-            <div class="invoice-tagline">FULL SECURITY SOLUTIONS · SINCE 2020</div>
-            <div class="invoice-tagline">HIK VISION AUTHORISED CCTV COMPANY</div>
-          </div>
-          <div class="invoice-contact-block">
-            <div class="invoice-director">T.V.Priyangan (Director)</div>
-            <div class="invoice-phone-row">
-              <span>📞 076 794 1101</span>
-              <a class="whatsapp-badge no-print" href="https://wa.me/94767941101" target="_blank" rel="noopener">WHATSAPP</a>
+        <!-- ===== META ROW ===== -->
+        <div class="inv-meta">
+          <div class="inv-meta-cell">
+            <span class="inv-meta-ic">🧾</span>
+            <div class="inv-meta-text">
+              <div class="inv-meta-label">Invoice No.</div>
+              <div class="inv-meta-value" id="invNoValue">DRAFT</div>
             </div>
-            <div class="invoice-email">✉️ dccctvelectricals@gmail.com</div>
+          </div>
+          <div class="inv-meta-cell">
+            <span class="inv-meta-ic">📅</span>
+            <div class="inv-meta-text">
+              <div class="inv-meta-label">Invoice Date</div>
+              <input type="date" id="invDate" class="inv-meta-input">
+            </div>
+          </div>
+          <div class="inv-meta-cell">
+            <span class="inv-meta-ic">🧑</span>
+            <div class="inv-meta-text">
+              <div class="inv-meta-label">Invoice Maker</div>
+              <div class="inv-meta-value" id="invMakerValue">—</div>
+            </div>
           </div>
         </div>
 
-        <div id="invoiceNumberBar" class="invoice-number-bar" style="display:none;"></div>
+        <div class="inv-body">
 
-        <div class="invoice-body">
-          <div class="invoice-field-row">
-            <div class="invoice-field">
-              <label>CUSTOMER NAME *</label>
-              <input type="text" id="invCustomerName" placeholder="Required">
+          <!-- ===== BILL TO / PROJECT ===== -->
+          <div class="inv-two-col">
+            <div class="inv-panel">
+              <div class="inv-panel-head">👤 BILL TO</div>
+              <div class="inv-panel-body">
+                <div class="inv-row"><span class="inv-row-ic">🧑</span><span class="inv-row-sep">:</span><input type="text" id="invCustomerName" placeholder="Customer name"></div>
+                <div class="inv-row"><span class="inv-row-ic">📞</span><span class="inv-row-sep">:</span><input type="text" id="invCustomerMobile" placeholder="Mobile no."></div>
+                <div class="inv-row"><span class="inv-row-ic">📍</span><span class="inv-row-sep">:</span><input type="text" id="invCustomerAddress" placeholder="Address"></div>
+              </div>
             </div>
-            <div class="invoice-field">
-              <label>CUSTOMER MOBILE NO. *</label>
-              <input type="text" id="invCustomerMobile" placeholder="Required">
-            </div>
-          </div>
-          <div class="invoice-field-row">
-            <div class="invoice-field">
-              <label>ADDRESS *</label>
-              <input type="text" id="invCustomerAddress" placeholder="Required">
-            </div>
-            <div class="invoice-field">
-              <label>DATE</label>
-              <input type="date" id="invDate">
+            <div class="inv-panel">
+              <div class="inv-panel-head">🏢 PROJECT / SITE DETAILS</div>
+              <div class="inv-panel-body">
+                <div class="inv-row"><span class="inv-row-lbl">Project Location</span><span class="inv-row-sep">:</span><input type="text" id="invProjectLocation" placeholder="Optional"></div>
+                <div class="inv-row"><span class="inv-row-lbl">Installation Type</span><span class="inv-row-sep">:</span><input type="text" id="invInstallType" placeholder="Optional"></div>
+                <div class="inv-row"><span class="inv-row-lbl">Payment Mode</span><span class="inv-row-sep">:</span><input type="text" id="invPaymentMode" placeholder="e.g. Ready Cash"></div>
+              </div>
             </div>
           </div>
 
-          <div class="invoice-notice">System-generated estimate — not a final bill. The final invoice will be issued and signed by the Director.</div>
+          <div id="invoiceLockNotice" class="inv-lock no-print">🔒 Fill in Customer Name, Mobile No., Address and Date to unlock items and invoicing.</div>
 
-          <div id="invoiceLockNotice" class="invoice-lock no-print">🔒 Fill in Customer Name, Mobile No., Address and Date above to unlock items and invoicing.</div>
-
-          <label>SEARCH STOCK TO ADD AN ITEM</label>
-          <div class="invoice-search-wrap no-print">
+          <div class="inv-search no-print invoice-search-wrap">
+            <label>SEARCH STOCK TO ADD AN ITEM</label>
             <input type="search" id="invStockSearch" class="search-input" placeholder="🔍 e.g. camera, cable, DVR..." disabled>
             <div id="invStockResults" class="invoice-search-results"></div>
           </div>
 
-          <div class="table-wrap invoice-items-wrap">
-            <table class="invoice-items-table">
+          <!-- ===== ITEMS ===== -->
+          <div class="inv-items">
+            <table class="inv-items-table">
               <thead>
-                <tr><th>QTY</th><th>ITEM NAME</th><th>WARRANTY</th><th>UNIT (RS)</th><th>TOTAL</th><th class="no-print"></th></tr>
+                <tr>
+                  <th class="c-no">#</th>
+                  <th class="c-desc">ITEM DESCRIPTION (HIKVISION)</th>
+                  <th class="c-war">WARRANTY</th>
+                  <th class="c-qty">QTY</th>
+                  <th class="c-unit">UNIT PRICE (Rs)</th>
+                  <th class="c-tot">TOTAL (Rs)</th>
+                  <th class="c-rm no-print"></th>
+                </tr>
               </thead>
               <tbody id="invoiceItemsBody"></tbody>
             </table>
@@ -492,27 +535,43 @@
 
           <button type="button" id="invAddBlankBtn" class="invoice-add-blank no-print" disabled>+ Add blank item</button>
 
-          <div class="invoice-summary-row">
-            <img src="images/invoicephoto.png" alt="" class="invoice-summary-art">
-            <div class="invoice-summary-box">
-              <div class="summary-line"><span>Subtotal</span><span id="invSubtotal">Rs 0.00</span></div>
-              <div class="summary-line"><span>Discount</span><input type="number" id="invDiscount" min="0" value="0" disabled></div>
-              <div class="summary-line total"><span>Final amount</span><span id="invFinalAmount">Rs 0.00</span></div>
-              <div class="summary-line"><span>Advance paid</span><input type="number" id="invAdvance" min="0" value="0" disabled></div>
-              <div class="summary-line total"><span>Balance due</span><span id="invBalanceDue">Rs 0.00</span></div>
+          <!-- ===== TERMS + SUMMARY ===== -->
+          <div class="inv-bottom">
+            <div class="inv-panel inv-terms-panel">
+              <div class="inv-panel-head">📋 TERMS &amp; CONDITIONS</div>
+              <ul class="inv-terms">
+                <li>This estimate is valid for 15 days from the invoice date.</li>
+                <li>Prices may change with final material / wiring.</li>
+                <li>Advance payment will be adjusted in final amount.</li>
+                <li>Payment mode: Ready Cash Only.</li>
+                <li>Warranty applicable as per company policy.</li>
+              </ul>
+            </div>
+            <div class="inv-summary">
+              <div class="inv-panel-head">🧮 SUMMARY</div>
+              <div class="inv-summary-body">
+                <div class="inv-sum-line"><span>Subtotal</span><span id="invSubtotal">Rs 0.00</span></div>
+                <div class="inv-sum-line inv-sum-discount"><span>Discount</span><span class="inv-sum-input">Rs <input type="number" id="invDiscount" min="0" value="0" disabled></span></div>
+                <div class="inv-sum-line inv-sum-final"><span>Final Amount</span><span id="invFinalAmount">Rs 0.00</span></div>
+                <div class="inv-sum-line"><span>Advance Paid</span><span class="inv-sum-input">Rs <input type="number" id="invAdvance" min="0" value="0" disabled></span></div>
+              </div>
+              <div class="inv-balance-bar"><span>Balance Due</span><span id="invBalanceDue">Rs 0.00</span></div>
             </div>
           </div>
 
-          <div class="invoice-terms">
-            <div class="terms-col">
-              <p><strong>Estimate only</strong> — not the final bill.</p>
-              <p><strong>Advance</strong> — adjusted against final amount.</p>
-              <p><strong>Payment mode</strong> — ready cash only.</p>
+          <!-- ===== FOOTER ===== -->
+          <div class="inv-footer">
+            <div class="inv-sign">
+              <div class="inv-sign-line"></div>
+              <div class="inv-sign-cap">Authorized Signature</div>
+              <div class="inv-sign-name">T.V.PRIYANGAN</div>
+              <div class="inv-sign-role">Director</div>
             </div>
-            <div class="terms-col">
-              <p><strong>Final invoice</strong> — issued &amp; signed by Director.</p>
-              <p><strong>Pricing</strong> — may change with final material/wiring.</p>
+            <div class="inv-partner">
+              <span class="inv-hik-name inv-hik-red">HIK<span>VISION</span></span>
+              <span>Authorised CCTV Partner</span>
             </div>
+            <div class="inv-safety"><span>🛡️</span><span>We use quality materials &amp; provide best security solutions for your safety.</span></div>
           </div>
 
           <p id="invoiceFormError" class="error-text"></p>
@@ -521,7 +580,7 @@
             <button type="button" id="invClearBtn" class="btn btn-gray">Clear</button>
             <button type="button" id="invSaveBtn" class="btn btn-cyan" disabled>💾 Save Invoice</button>
             <button type="button" id="invPrintBtn" class="btn btn-blue" style="display:none;">🖨️ Print</button>
-            <button type="button" id="invDownloadBtn" class="btn btn-orange" style="display:none;">⬇️ Download</button>
+            <button type="button" id="invDownloadBtn" class="btn btn-orange" style="display:none;">⬇️ Download JPEG</button>
             <button type="button" id="invNewBtn" class="btn btn-green" style="display:none;">➕ New Invoice</button>
           </div>
         </div>

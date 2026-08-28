@@ -863,7 +863,10 @@ let invoiceSaved = false;
 let currentInvoiceId = null;
 
 function formatRs(n) {
-  return 'Rs ' + Number(n || 0).toFixed(2);
+  return 'Rs ' + Number(n || 0).toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
 }
 
 function initInvoiceModal() {
@@ -949,16 +952,21 @@ function resetInvoiceForm() {
   document.getElementById('invCustomerName').value = '';
   document.getElementById('invCustomerMobile').value = '';
   document.getElementById('invCustomerAddress').value = '';
+  document.getElementById('invProjectLocation').value = '';
+  document.getElementById('invInstallType').value = '';
+  document.getElementById('invPaymentMode').value = 'Ready Cash';
   document.getElementById('invDate').value = new Date().toISOString().slice(0, 10);
   document.getElementById('invDiscount').value = 0;
   document.getElementById('invAdvance').value = 0;
   document.getElementById('invStockSearch').value = '';
   document.getElementById('invStockResults').innerHTML = '';
   document.getElementById('invoiceFormError').textContent = '';
-  document.getElementById('invoiceNumberBar').style.display = 'none';
+  document.getElementById('invNoValue').textContent = 'DRAFT';
+  document.getElementById('invMakerValue').textContent = (currentUser && currentUser.username) || '—';
 
   [
-    'invCustomerName', 'invCustomerMobile', 'invCustomerAddress', 'invDate',
+    'invCustomerName', 'invCustomerMobile', 'invCustomerAddress',
+    'invProjectLocation', 'invInstallType', 'invPaymentMode', 'invDate',
     'invDiscount', 'invAdvance'
   ].forEach((id) => { document.getElementById(id).disabled = false; });
 
@@ -997,14 +1005,15 @@ function renderInvoiceItems() {
   }
   empty.style.display = 'none';
 
-  tbody.innerHTML = invoiceItems.map((it) => `
+  tbody.innerHTML = invoiceItems.map((it, idx) => `
     <tr data-row-id="${it.rowId}">
-      <td><input type="number" min="1" data-field="quantity" value="${it.quantity}" ${invoiceSaved ? 'disabled' : ''}></td>
-      <td><input type="text" data-field="item_name" value="${escapeHtml(it.item_name)}" placeholder="Item name" ${invoiceSaved ? 'disabled' : ''}></td>
-      <td><input type="text" data-field="warranty" value="${escapeHtml(it.warranty)}" placeholder="e.g. 1 Year" ${invoiceSaved ? 'disabled' : ''}></td>
-      <td><input type="number" min="0" step="0.01" data-field="unit_price" value="${it.unit_price}" ${invoiceSaved ? 'disabled' : ''}></td>
-      <td class="invoice-row-total">${formatRs((Number(it.quantity) || 0) * (Number(it.unit_price) || 0))}</td>
-      <td class="no-print">${invoiceSaved ? '' : '<button type="button" class="invoice-row-remove" title="Remove">✕</button>'}</td>
+      <td class="c-no">${idx + 1}</td>
+      <td class="c-desc"><input type="text" data-field="item_name" value="${escapeHtml(it.item_name)}" placeholder="Item description" ${invoiceSaved ? 'disabled' : ''}></td>
+      <td class="c-war"><input type="text" data-field="warranty" value="${escapeHtml(it.warranty)}" placeholder="e.g. 1 Year" ${invoiceSaved ? 'disabled' : ''}></td>
+      <td class="c-qty"><input type="number" min="1" data-field="quantity" value="${it.quantity}" ${invoiceSaved ? 'disabled' : ''}></td>
+      <td class="c-unit"><input type="number" min="0" step="0.01" data-field="unit_price" value="${it.unit_price}" ${invoiceSaved ? 'disabled' : ''}></td>
+      <td class="c-tot invoice-row-total">${formatRs((Number(it.quantity) || 0) * (Number(it.unit_price) || 0))}</td>
+      <td class="c-rm no-print">${invoiceSaved ? '' : '<button type="button" class="invoice-row-remove" title="Remove">✕</button>'}</td>
     </tr>
   `).join('');
 }
@@ -1109,12 +1118,11 @@ function enterInvoiceSavedMode(invoice) {
   invoiceSaved = true;
   currentInvoiceId = invoice.id;
 
-  const numberBar = document.getElementById('invoiceNumberBar');
-  numberBar.textContent = `Invoice #INV-${String(invoice.id).padStart(6, '0')} — Saved ${formatBillDate(invoice.invoice_date)}`;
-  numberBar.style.display = 'block';
+  document.getElementById('invNoValue').textContent = `INV-${String(invoice.id).padStart(6, '0')}`;
 
   [
-    'invCustomerName', 'invCustomerMobile', 'invCustomerAddress', 'invDate',
+    'invCustomerName', 'invCustomerMobile', 'invCustomerAddress',
+    'invProjectLocation', 'invInstallType', 'invPaymentMode', 'invDate',
     'invDiscount', 'invAdvance', 'invStockSearch', 'invAddBlankBtn'
   ].forEach((id) => { document.getElementById(id).disabled = true; });
 
@@ -1135,15 +1143,21 @@ async function downloadInvoiceImage() {
   btn.textContent = '⏳ Preparing...';
 
   try {
-    const canvas = await html2canvas(document.getElementById('invoiceDoc'), {
+    const doc = document.getElementById('invoiceDoc');
+    const canvas = await html2canvas(doc, {
       scale: 2,
       backgroundColor: '#ffffff',
       useCORS: true,
+      width: doc.offsetWidth,
+      height: doc.offsetHeight,
+      windowWidth: Math.max(doc.offsetWidth + 48, document.documentElement.clientWidth),
+      scrollX: 0,
+      scrollY: -window.scrollY,
       ignoreElements: (el) => el.classList && el.classList.contains('no-print')
     });
     const link = document.createElement('a');
-    link.download = `Invoice-INV-${String(currentInvoiceId).padStart(6, '0')}.png`;
-    link.href = canvas.toDataURL('image/png');
+    link.download = `Invoice-INV-${String(currentInvoiceId).padStart(6, '0')}.jpg`;
+    link.href = canvas.toDataURL('image/jpeg', 0.95);
     link.click();
   } catch (err) {
     alert('Could not generate the invoice image: ' + err.message);
@@ -1225,6 +1239,7 @@ async function openInvoiceForViewing(id) {
     document.getElementById('invCustomerName').value = invoice.customer_name;
     document.getElementById('invCustomerMobile').value = invoice.customer_mobile;
     document.getElementById('invCustomerAddress').value = invoice.customer_address;
+    document.getElementById('invMakerValue').textContent = invoice.created_by || '—';
     document.getElementById('invDate').value = String(invoice.invoice_date).slice(0, 10);
     document.getElementById('invDiscount').value = invoice.discount;
     document.getElementById('invAdvance').value = invoice.advance_paid;
