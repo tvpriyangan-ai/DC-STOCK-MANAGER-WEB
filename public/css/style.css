@@ -1074,10 +1074,13 @@ button {
   font-weight: 700;
 }
 .inv-items-table .c-qty {
-  width: 54px;
+  width: 78px;
 }
 .inv-items-table .c-qty input {
   text-align: center;
+  padding-left: 6px;
+  padding-right: 6px;
+  letter-spacing: 0.5px;
 }
 .inv-items-table .c-unit {
   width: 108px;
