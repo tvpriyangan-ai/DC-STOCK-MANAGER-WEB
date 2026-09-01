@@ -22,8 +22,37 @@ router.get('/dashboard/counts', async (req, res) => {
     const [[{ total_stock }]] = await pool.query('SELECT IFNULL(SUM(stock_count),0) AS total_stock FROM product');
     const [[{ low_stock }]] = await pool.query('SELECT COUNT(*) AS low_stock FROM product WHERE stock_count <= 5 AND stock_count > 0');
     const [[{ out_of_stock }]] = await pool.query('SELECT COUNT(*) AS out_of_stock FROM product WHERE stock_count = 0');
+    // Total worth of everything on hand = price x quantity in stock, summed.
+    const [[{ total_value }]] = await pool.query('SELECT IFNULL(SUM(price * stock_count),0) AS total_value FROM product');
 
-    res.json({ total_products, total_stock, low_stock, out_of_stock });
+    res.json({ total_products, total_stock, low_stock, out_of_stock, total_value });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Something went wrong. Please try again.' });
+  }
+});
+
+// ---------- INVENTORY VALUATION (must be before /:id) ----------
+// Full valuation of the stock currently on hand, broken down by category.
+// Each row's value is SUM(price * stock_count); the grand total is the sum
+// of those rows. Powers the "Stock Value" pill in the header.
+router.get('/dashboard/valuation', async (req, res) => {
+  try {
+    const [categories] = await pool.query(
+      `SELECT category,
+              COUNT(*)                            AS product_count,
+              IFNULL(SUM(stock_count), 0)         AS total_stock,
+              IFNULL(SUM(price * stock_count), 0) AS category_value
+       FROM product
+       GROUP BY category
+       ORDER BY category_value DESC`
+    );
+
+    const total_value = categories.reduce((sum, r) => sum + Number(r.category_value), 0);
+    const total_products = categories.reduce((sum, r) => sum + Number(r.product_count), 0);
+    const total_stock = categories.reduce((sum, r) => sum + Number(r.total_stock), 0);
+
+    res.json({ total_value, total_products, total_stock, categories });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Something went wrong. Please try again.' });

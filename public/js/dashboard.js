@@ -26,7 +26,7 @@ let selectedUserId = null;
 // buttons regular staff can't use out of their way.
 function applyRolePermissions() {
   const isAdmin = (currentUser.role || '').trim().toLowerCase() === 'admin';
-  ['addBtn', 'updateBtn', 'deleteBtn', 'usersBtn', 'customerBillBtn', 'invoiceHistoryBtn'].forEach((id) => {
+  ['addBtn', 'updateBtn', 'deleteBtn', 'usersBtn', 'customerBillBtn', 'invoiceHistoryBtn', 'valuationBtn'].forEach((id) => {
     document.getElementById(id).style.display = isAdmin ? '' : 'none';
   });
 
@@ -53,6 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initWifiFormModal();
   initInvoiceModal();
   initInvoiceHistoryModal();
+  initValuationModal();
 
   loadDashboardCounts();
   loadProducts();
@@ -116,8 +117,57 @@ async function loadDashboardCounts() {
     document.getElementById('statTotalStock').textContent = counts.total_stock;
     document.getElementById('statLowStock').textContent = counts.low_stock;
     document.getElementById('statOutOfStock').textContent = counts.out_of_stock;
+    document.getElementById('valuationHeaderValue').textContent = formatRs(counts.total_value);
   } catch (err) {
     setStatus('Could not load dashboard counts: ' + err.message);
+  }
+}
+
+// ================= STOCK VALUATION =================
+// Full worth of everything currently in stock (price x quantity on hand).
+// The header pill shows the grand total; tapping it opens a per-category
+// breakdown. Refreshed alongside the dashboard counts whenever stock,
+// prices or the catalog change.
+
+function initValuationModal() {
+  const overlay = document.getElementById('valuationModal');
+  document.getElementById('valuationBtn').addEventListener('click', openValuationModal);
+  document.getElementById('valuationCloseBtn').addEventListener('click', () => overlay.classList.remove('open'));
+}
+
+async function openValuationModal() {
+  const tbody = document.getElementById('valuationTableBody');
+  const errorText = document.getElementById('valuationError');
+  errorText.textContent = '';
+  tbody.innerHTML = '<tr><td colspan="4">Loading...</td></tr>';
+  document.getElementById('valuationModal').classList.add('open');
+
+  try {
+    const data = await API.get('/products/dashboard/valuation');
+    tbody.innerHTML = '';
+
+    data.categories.forEach((c) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${escapeHtml(c.category)}</td>
+        <td>${c.product_count}</td>
+        <td>${c.total_stock}</td>
+        <td>${formatRs(c.category_value)}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    if (data.categories.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="4">No products yet.</td></tr>';
+    }
+
+    document.getElementById('valuationGrandProducts').textContent = data.total_products;
+    document.getElementById('valuationGrandStock').textContent = data.total_stock;
+    document.getElementById('valuationGrandValue').textContent = formatRs(data.total_value);
+    document.getElementById('valuationHeaderValue').textContent = formatRs(data.total_value);
+  } catch (err) {
+    tbody.innerHTML = '';
+    errorText.textContent = err.message;
   }
 }
 

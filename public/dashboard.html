@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>DC Stock Manager</title>
 <link rel="icon" type="image/jpeg" href="images/logo_v2.jpeg">
-<link rel="stylesheet" href="css/style.css?v=8">
+<link rel="stylesheet" href="css/style.css?v=9">
 </head>
 <body class="app-body">
 
@@ -14,6 +14,10 @@
     <button id="menuToggle" class="icon-btn menu-toggle" aria-label="Toggle categories">☰</button>
     <img src="images/logo_v2.jpeg" alt="" class="header-logo" onerror="this.style.display='none'">
     <h1 class="header-title">DC STOCK MANAGER</h1>
+    <button id="valuationBtn" class="valuation-pill" title="Total value of all stock currently on hand — tap for a category breakdown">
+      <span class="valuation-pill-label">💰 Stock Value</span>
+      <span class="valuation-pill-value" id="valuationHeaderValue">Rs …</span>
+    </button>
     <div class="header-actions">
       <button id="invoiceBtn" class="btn btn-cyan btn-sm" title="Invoice"><span class="btn-icon">🧾</span><span class="btn-label"> Invoice</span></button>
       <button id="invoiceHistoryBtn" class="btn btn-orange btn-sm" title="Invoice History"><span class="btn-icon">📜</span><span class="btn-label"> Invoice History</span></button>
@@ -191,6 +195,34 @@
           <button type="button" class="btn btn-gray" id="productCancelBtn">❌ Cancel</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- ===================== STOCK VALUATION MODAL ===================== -->
+  <div id="valuationModal" class="modal-overlay">
+    <div class="modal modal-narrow">
+      <div class="modal-header-row">
+        <h3>💰 STOCK VALUATION</h3>
+        <button class="btn btn-red btn-sm" id="valuationCloseBtn">❌ Close</button>
+      </div>
+      <p class="valuation-note">Worth of every product currently in stock — each product's price × quantity on hand.</p>
+      <div class="table-wrap">
+        <table class="product-table">
+          <thead>
+            <tr><th>Category</th><th>Products</th><th>In Stock</th><th>Value (Rs)</th></tr>
+          </thead>
+          <tbody id="valuationTableBody"></tbody>
+          <tfoot>
+            <tr class="valuation-grand-row">
+              <td>TOTAL</td>
+              <td id="valuationGrandProducts">0</td>
+              <td id="valuationGrandStock">0</td>
+              <td id="valuationGrandValue">Rs 0.00</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      <p id="valuationError" class="error-text"></p>
     </div>
   </div>
 
@@ -589,7 +621,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-  <script src="js/api.js?v=8"></script>
-  <script src="js/dashboard.js?v=8"></script>
+  <script src="js/api.js?v=9"></script>
+  <script src="js/dashboard.js?v=9"></script>
 </body>
 </html>
