@@ -278,6 +278,22 @@ button {
   color: var(--green);
 }
 
+.valuation-modal {
+  max-width: 620px;
+}
+/* Short 4-column table — show it all in one box, no sideways scroll. */
+.valuation-modal .table-wrap {
+  overflow-x: visible;
+}
+.valuation-modal .product-table {
+  min-width: 0;
+}
+.valuation-modal .product-table th:nth-child(n + 2),
+.valuation-modal .product-table td:nth-child(n + 2) {
+  text-align: right;
+  white-space: nowrap;
+}
+
 .valuation-note {
   color: var(--gray);
   font-size: 13px;
