@@ -168,7 +168,7 @@ router.post('/', requireAdmin, async (req, res) => {
 
     await pool.query(
       `INSERT INTO activity_log (username, activity) VALUES (?, ?)`,
-      [created_by || 'Admin', `Added Product : ${product_name.trim()}`]
+      [req.user.username, `Added Product : ${product_name.trim()}`]
     );
 
     res.status(201).json({ id: result.insertId });
@@ -197,7 +197,7 @@ router.put('/:id', requireAdmin, async (req, res) => {
 
     await pool.query(
       `INSERT INTO activity_log (username, activity) VALUES (?, ?)`,
-      ['Admin', `Updated Product : ${product_name.trim()}`]
+      [req.user.username, `Updated Product : ${product_name.trim()}`]
     );
 
     res.json({ success: true });
@@ -257,7 +257,7 @@ router.delete('/:id', requireAdmin, async (req, res) => {
 
     await pool.query(
       `INSERT INTO activity_log (username, activity) VALUES (?, ?)`,
-      ['Admin', `Deleted Product : ${rows[0].product_name}`]
+      [req.user.username, `Deleted Product : ${rows[0].product_name}`]
     );
 
     res.json({ success: true });

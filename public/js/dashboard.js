@@ -560,7 +560,7 @@ async function openHistoryModal() {
 
 async function loadHistory(keyword) {
   try {
-    const query = keyword ? `?q=${encodeURIComponent(keyword)}` : '';
+    const query = keyword ? `?limit=400&q=${encodeURIComponent(keyword)}` : '?limit=400';
     const rows = await API.get('/activity' + query);
     const tbody = document.getElementById('historyTableBody');
     tbody.innerHTML = '';

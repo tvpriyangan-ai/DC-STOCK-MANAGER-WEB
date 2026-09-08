@@ -202,16 +202,20 @@ const DatabaseFunctions = {
   // ACTIVITY LOG
   // ==========================
 
-  async getRecentActivities(limit = 100) {
-    const [rows] = await pool.query(
-      `
+  async getRecentActivities(limit = 400, keyword = "") {
+    let sql = `
       SELECT created_at, username, activity
       FROM activity_log
-      ORDER BY id DESC
-      LIMIT ?
-    `,
-      [limit]
-    );
+    `;
+    const params = [];
+    if (keyword) {
+      const like = `%${keyword}%`;
+      sql += ` WHERE username LIKE ? OR activity LIKE ? `;
+      params.push(like, like);
+    }
+    sql += ` ORDER BY id DESC LIMIT ?`;
+    params.push(limit);
+    const [rows] = await pool.query(sql, params);
     return rows;
   },
 
