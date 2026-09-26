@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>DC Stock Manager</title>
 <link rel="icon" type="image/jpeg" href="images/logo_v2.jpeg">
-<link rel="stylesheet" href="css/style.css?v=11">
+<link rel="stylesheet" href="css/style.css?v=12">
 </head>
 <body class="app-body">
 
@@ -188,6 +188,11 @@
         </div>
         <p class="hint-text">Don't see your image? Add the file to <code>public/images/</code> in your GitHub repo, push, and reopen this form.</p>
 
+        <div id="productCommentWrap">
+          <label>Comment <span class="required-mark">*</span></label>
+          <textarea id="productComment" rows="2" maxlength="255" placeholder="e.g. Purchased from supplier / Bill no."></textarea>
+        </div>
+
         <p id="productFormError" class="error-text"></p>
 
         <div class="modal-actions">
@@ -245,6 +250,9 @@
           <label><input type="radio" name="stockOp" value="IN" checked> 📥 Stock IN</label>
           <label><input type="radio" name="stockOp" value="OUT"> 📤 Stock OUT</label>
         </div>
+
+        <label>Comment <span class="required-mark">*</span></label>
+        <textarea id="stockComment" rows="2" maxlength="255" placeholder="e.g. Used at customer site / New purchase"></textarea>
 
         <p id="stockFormError" class="error-text"></p>
 
@@ -630,7 +638,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-  <script src="js/api.js?v=11"></script>
-  <script src="js/dashboard.js?v=11"></script>
+  <script src="js/api.js?v=12"></script>
+  <script src="js/dashboard.js?v=12"></script>
 </body>
 </html>

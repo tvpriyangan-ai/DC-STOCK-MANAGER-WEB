@@ -649,7 +649,8 @@ button {
 .modal input[type="number"],
 .modal input[type="password"],
 .modal input[type="file"],
-.modal select {
+.modal select,
+.modal textarea {
   width: 100%;
   padding: 9px 10px;
   border-radius: 4px;
@@ -1646,3 +1647,7 @@ button {
   font-size: 12px;
   font-weight: 700;
 }
+
+/* Required comment box (Stock IN/OUT, Add Product) */
+.required-mark { color: #dc2626; }
+.modal textarea { resize: vertical; font-family: inherit; }

@@ -156,6 +156,10 @@ router.post('/', requireAdmin, async (req, res) => {
   if (stock_count === undefined || stock_count === '') {
     return res.status(400).json({ error: 'Please enter Stock Quantity.' });
   }
+  const comment = (req.body.comment || '').trim();
+  if (!comment) {
+    return res.status(400).json({ error: 'Please enter a comment.' });
+  }
 
   const image_path = rawImagePath || '';
 
@@ -168,7 +172,7 @@ router.post('/', requireAdmin, async (req, res) => {
 
     await pool.query(
       `INSERT INTO activity_log (username, activity) VALUES (?, ?)`,
-      [req.user.username, `Added Product : ${product_name.trim()}`]
+      [req.user.username, `Added Product : ${product_name.trim()} | Comment: ${comment}`]
     );
 
     res.status(201).json({ id: result.insertId });
@@ -212,9 +216,13 @@ router.put('/:id/stock', requireAuth, async (req, res) => {
   const { operation, quantity } = req.body;
   const username = req.user.username;
   const qty = parseInt(quantity);
+  const comment = (req.body.comment || '').trim();
 
   if (!qty || qty <= 0) {
     return res.status(400).json({ error: 'Quantity must be greater than zero.' });
+  }
+  if (!comment) {
+    return res.status(400).json({ error: 'Please enter a comment.' });
   }
 
   try {
@@ -237,7 +245,7 @@ router.put('/:id/stock', requireAuth, async (req, res) => {
 
     await pool.query(
       `INSERT INTO activity_log (username, activity) VALUES (?, ?)`,
-      [username || 'Admin', `Stock ${operation} : ${rows[0].product_name} (${current} \u2192 ${newStock})`]
+      [username || 'Admin', `Stock ${operation} : ${rows[0].product_name} (${current} \u2192 ${newStock}) | Comment: ${comment}`]
     );
 
     res.json({ success: true, new_stock: newStock });

@@ -449,6 +449,14 @@ function initProductModal() {
       image_path: imageSelect.value
     };
 
+    if (!id) {
+      payload.comment = document.getElementById('productComment').value.trim();
+      if (!payload.comment) {
+        errorText.textContent = 'Please enter a comment.';
+        return;
+      }
+    }
+
     try {
       if (id) {
         await API.put('/products/' + id, payload);
@@ -471,6 +479,7 @@ async function openAddProductModal() {
   document.getElementById('productForm').reset();
   document.getElementById('productId').value = '';
   document.getElementById('productFormError').textContent = '';
+  document.getElementById('productCommentWrap').hidden = false;
   await loadAvailableImages();
   document.getElementById('productImageSelect').value = '';
   updateImagePreview();
@@ -487,6 +496,7 @@ async function openUpdateProductModal(p) {
   document.getElementById('productStock').value = p.stock_count;
   document.getElementById('productCreatedBy').value = p.created_by;
   document.getElementById('productFormError').textContent = '';
+  document.getElementById('productCommentWrap').hidden = true;
 
   await loadAvailableImages();
   document.getElementById('productImageSelect').value = p.image_path || '';
@@ -512,11 +522,17 @@ function initStockModal() {
 
     const qty = parseInt(document.getElementById('stockQuantity').value);
     const operation = document.querySelector('input[name="stockOp"]:checked').value;
+    const comment = document.getElementById('stockComment').value.trim();
+    if (!comment) {
+      errorText.textContent = 'Please enter a comment.';
+      return;
+    }
 
     try {
       await API.put(`/products/${p.id}/stock`, {
         operation,
         quantity: qty,
+        comment,
         username: currentUser.username
       });
       overlay.classList.remove('open');
@@ -533,6 +549,7 @@ function openStockModal(p) {
   document.getElementById('stockProductName').value = p.product_name;
   document.getElementById('stockCurrentStock').value = p.stock_count;
   document.getElementById('stockQuantity').value = 1;
+  document.getElementById('stockComment').value = '';
   document.querySelector('input[name="stockOp"][value="IN"]').checked = true;
   document.getElementById('stockFormError').textContent = '';
   document.getElementById('stockModal').classList.add('open');
@@ -565,9 +582,10 @@ async function openHistoryModal() {
   await loadHistory();
 }
 
-// "Stock OUT : Name (10 → 7)" → 3
+// "Stock OUT : Name (10 → 7) | Comment: ..." → 3
 function usedQtyFromActivity(activity) {
-  const m = /^Stock OUT :.*\((\d+)\s*→\s*(\d+)\)\s*$/.exec(activity || '');
+  const main = (activity || '').split(' | Comment: ')[0];
+  const m = /^Stock OUT :.*\((\d+)\s*→\s*(\d+)\)\s*$/.exec(main);
   return m ? Number(m[1]) - Number(m[2]) : null;
 }
 
