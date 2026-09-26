@@ -1699,3 +1699,16 @@ button {
   -webkit-text-fill-color: #14203a;
   opacity: 1;
 }
+
+/* Download capture only (applied to html2canvas's copy of the sheet):
+   no forced A4 height, so the JPEG ends right after the footer. */
+.invoice-doc.inv-capturing {
+  min-height: 0;
+}
+.invoice-doc.inv-capturing .inv-footer {
+  margin-top: 18px;
+}
+.invoice-doc.inv-capturing .no-print,
+.invoice-doc.inv-capturing #invoiceFormError {
+  display: none !important;
+}

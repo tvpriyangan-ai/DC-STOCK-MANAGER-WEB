@@ -1375,6 +1375,15 @@ function replaceFieldsWithText(clonedDoc, originalDoc) {
   });
 }
 
+function cropCanvasHeight(source, height) {
+  if (height >= source.height) return source;
+  const out = document.createElement('canvas');
+  out.width = source.width;
+  out.height = height;
+  out.getContext('2d').drawImage(source, 0, 0, source.width, height, 0, 0, source.width, height);
+  return out;
+}
+
 async function downloadInvoiceImage() {
   const btn = document.getElementById('invDownloadBtn');
   const originalText = btn.textContent;
@@ -1383,9 +1392,11 @@ async function downloadInvoiceImage() {
 
   try {
     const doc = document.getElementById('invoiceDoc');
+    const scale = 2;
+    let contentHeight = doc.offsetHeight;
     tagInvoiceFieldsForCapture(doc);
-    const canvas = await html2canvas(doc, {
-      scale: 2,
+    const fullCanvas = await html2canvas(doc, {
+      scale,
       backgroundColor: '#ffffff',
       useCORS: true,
       width: doc.offsetWidth,
@@ -1394,8 +1405,16 @@ async function downloadInvoiceImage() {
       scrollX: 0,
       scrollY: -window.scrollY,
       ignoreElements: (el) => el.classList && el.classList.contains('no-print'),
-      onclone: (clonedDoc) => replaceFieldsWithText(clonedDoc, doc)
+      onclone: (clonedDoc) => {
+        replaceFieldsWithText(clonedDoc, doc);
+        // Drop the fixed A4 min-height in the copy so the sheet ends right
+        // after the signature footer, then remember that height to crop to.
+        const clonedSheet = clonedDoc.getElementById('invoiceDoc');
+        clonedSheet.classList.add('inv-capturing');
+        contentHeight = Math.min(clonedSheet.offsetHeight, doc.offsetHeight);
+      }
     });
+    const canvas = cropCanvasHeight(fullCanvas, Math.ceil(contentHeight * scale));
     const link = document.createElement('a');
     link.download = `Invoice-INV-${String(currentInvoiceId).padStart(6, '0')}.jpg`;
     link.href = canvas.toDataURL('image/jpeg', 0.95);
