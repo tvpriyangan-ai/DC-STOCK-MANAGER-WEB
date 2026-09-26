@@ -545,34 +545,63 @@ function initHistoryModal() {
   document.getElementById('historyCloseBtn').addEventListener('click', () => overlay.classList.remove('open'));
 
   const search = document.getElementById('historySearch');
+  const type = document.getElementById('historyType');
   let timer;
   search.addEventListener('input', () => {
     clearTimeout(timer);
-    timer = setTimeout(() => loadHistory(search.value.trim()), 250);
+    timer = setTimeout(loadHistory, 250);
   });
+  type.addEventListener('change', loadHistory);
 }
 
+// Opens with the main search bar's text (or the selected product's name)
+// already in the history search, so you can go straight to an item's history.
 async function openHistoryModal() {
-  document.getElementById('historySearch').value = '';
+  const mainKeyword = document.getElementById('searchInput').value.trim();
+  const selected = getSelectedProduct();
+  document.getElementById('historySearch').value = mainKeyword || (selected ? selected.product_name : '');
+  document.getElementById('historyType').value = '';
   document.getElementById('historyModal').classList.add('open');
-  await loadHistory('');
+  await loadHistory();
 }
 
-async function loadHistory(keyword) {
+// "Stock OUT : Name (10 → 7)" → 3
+function usedQtyFromActivity(activity) {
+  const m = /^Stock OUT :.*\((\d+)\s*→\s*(\d+)\)\s*$/.exec(activity || '');
+  return m ? Number(m[1]) - Number(m[2]) : null;
+}
+
+let historyRequestId = 0;
+
+async function loadHistory() {
+  const keyword = document.getElementById('historySearch').value.trim();
+  const type = document.getElementById('historyType').value;
+  const requestId = ++historyRequestId;
   try {
-    const query = keyword ? `?limit=400&q=${encodeURIComponent(keyword)}` : '?limit=400';
-    const rows = await API.get('/activity' + query);
+    const params = new URLSearchParams({ limit: 400 });
+    if (keyword) params.set('q', keyword);
+    if (type) params.set('type', type);
+    const rows = await API.get('/activity?' + params.toString());
+    if (requestId !== historyRequestId) return; // a newer search has started
+
     const tbody = document.getElementById('historyTableBody');
     tbody.innerHTML = '';
+    let totalUsed = 0;
     rows.forEach((r) => {
       const tr = document.createElement('tr');
       const when = new Date(r.created_at).toLocaleString();
-      tr.innerHTML = `<td>${escapeHtml(when)}</td><td>${escapeHtml(r.username)}</td><td>${escapeHtml(r.activity)}</td>`;
+      const used = usedQtyFromActivity(r.activity);
+      if (used !== null) totalUsed += used;
+      const usedBadge = used !== null ? ` <span class="used-badge">Used ${used}</span>` : '';
+      tr.innerHTML = `<td>${escapeHtml(when)}</td><td>${escapeHtml(r.username)}</td><td>${escapeHtml(r.activity)}${usedBadge}</td>`;
       tbody.appendChild(tr);
     });
-    document.getElementById('historyTotal').textContent = keyword
+
+    let text = keyword || type
       ? `Showing ${rows.length} Result(s)`
       : `Showing Last ${rows.length} Activities`;
+    if (type === 'used') text += ` · Total Used: ${totalUsed}`;
+    document.getElementById('historyTotal').textContent = text;
   } catch (err) {
     alert(err.message);
   }

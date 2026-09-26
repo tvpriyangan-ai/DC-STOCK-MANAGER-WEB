@@ -1618,3 +1618,31 @@ button {
     display: none;
   }
 }
+
+/* History modal: search + type filter */
+.history-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.history-type-select {
+  padding: 10px 12px;
+  border-radius: 5px;
+  border: 1px solid var(--border);
+  background: #fff;
+  color: #111;
+  font-size: 14px;
+}
+
+.used-badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 8px;
+  border-radius: 10px;
+  background: #fde2e2;
+  color: #b91c1c;
+  font-size: 12px;
+  font-weight: 700;
+}

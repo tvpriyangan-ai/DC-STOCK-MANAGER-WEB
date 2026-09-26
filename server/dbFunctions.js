@@ -202,17 +202,30 @@ const DatabaseFunctions = {
   // ACTIVITY LOG
   // ==========================
 
-  async getRecentActivities(limit = 400, keyword = "") {
+  // type: "used" (Stock OUT), "in" (Stock IN), "invoice", "product" (add/update/delete)
+  async getRecentActivities(limit = 400, keyword = "", type = "") {
     let sql = `
       SELECT created_at, username, activity
       FROM activity_log
     `;
+    const where = [];
     const params = [];
     if (keyword) {
       const like = `%${keyword}%`;
-      sql += ` WHERE username LIKE ? OR activity LIKE ? `;
+      where.push(`(username LIKE ? OR activity LIKE ?)`);
       params.push(like, like);
     }
+    const typePatterns = {
+      used: ["Stock OUT :%"],
+      in: ["Stock IN :%"],
+      invoice: ["Created Invoice%"],
+      product: ["Added Product%", "Updated Product%", "Deleted Product%"],
+    };
+    if (typePatterns[type]) {
+      where.push(`(${typePatterns[type].map(() => "activity LIKE ?").join(" OR ")})`);
+      params.push(...typePatterns[type]);
+    }
+    if (where.length) sql += ` WHERE ${where.join(" AND ")} `;
     sql += ` ORDER BY id DESC LIMIT ?`;
     params.push(limit);
     const [rows] = await pool.query(sql, params);
