@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>DC Stock Manager</title>
 <link rel="icon" type="image/jpeg" href="images/logo_v2.jpeg">
-<link rel="stylesheet" href="css/style.css?v=16">
+<link rel="stylesheet" href="css/style.css?v=17">
 </head>
 <body class="app-body">
 
@@ -640,12 +640,25 @@
             <button type="button" id="invNewBtn" class="btn btn-green" style="display:none;">➕ New Invoice</button>
           </div>
         </div>
+
+        <!-- ===== BOTTOM ART: header design mirrored, fills leftover A4 space ===== -->
+        <div class="inv-bottom-art" aria-hidden="true">
+          <svg class="inv-header-swoosh" viewBox="0 0 794 178" preserveAspectRatio="none">
+            <g transform="translate(794 178) scale(-1 -1)">
+              <path class="sw-blue-soft" d="M410 190 C494 128 452 60 574 -12 L680 -12 C592 54 640 126 508 190 Z"/>
+              <path class="sw-blue" d="M332 190 C416 128 374 60 496 -12 L576 -12 C488 54 536 126 420 190 Z"/>
+              <path class="sw-cyan" d="M576 -12 C488 54 536 126 420 190 L432 190 C550 126 502 54 590 -12 Z"/>
+              <path class="sw-gold" d="M256 190 C340 128 298 60 420 -12 L508 -12 C420 54 468 126 352 190 Z"/>
+              <path class="sw-gold-hi" d="M256 190 C340 128 298 60 420 -12 L438 -12 C318 58 360 128 276 190 Z"/>
+            </g>
+          </svg>
+        </div>
       </div>
     </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-  <script src="js/api.js?v=16"></script>
-  <script src="js/dashboard.js?v=16"></script>
+  <script src="js/api.js?v=17"></script>
+  <script src="js/dashboard.js?v=17"></script>
 </body>
 </html>

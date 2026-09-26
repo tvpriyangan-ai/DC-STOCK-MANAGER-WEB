@@ -1320,7 +1320,7 @@ button {
   display: flex;
   gap: 14px;
   align-items: flex-end;
-  margin-top: auto;
+  margin-top: 18px;
   padding-top: 16px;
   border-top: 1px solid #e6ebf2;
 }
@@ -1701,14 +1701,20 @@ button {
 }
 
 /* Download capture only (applied to html2canvas's copy of the sheet):
-   no forced A4 height, so the JPEG ends right after the footer. */
-.invoice-doc.inv-capturing {
-  min-height: 0;
-}
-.invoice-doc.inv-capturing .inv-footer {
-  margin-top: 18px;
-}
+   buttons/error line are dropped so the bottom art fills that space too. */
 .invoice-doc.inv-capturing .no-print,
 .invoice-doc.inv-capturing #invoiceFormError {
   display: none !important;
+}
+
+/* Bottom band: same navy + swoosh as the header, grows to fill whatever
+   A4 space is left under the footer instead of leaving it blank. */
+.invoice-doc .inv-body {
+  flex: 0 0 auto;
+}
+.inv-bottom-art {
+  position: relative;
+  flex: 1 0 70px;
+  overflow: hidden;
+  background: linear-gradient(112deg, #081a3c 0%, #0c2352 52%, #081a3c 100%);
 }
