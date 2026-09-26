@@ -26,7 +26,8 @@ let selectedUserId = null;
 // buttons regular staff can't use out of their way.
 function applyRolePermissions() {
   const isAdmin = (currentUser.role || '').trim().toLowerCase() === 'admin';
-  ['addBtn', 'updateBtn', 'deleteBtn', 'usersBtn', 'customerBillBtn', 'invoiceHistoryBtn', 'valuationBtn'].forEach((id) => {
+  // Invoice History is shown to everyone; staff just don't get Admin-made invoices.
+  ['addBtn', 'updateBtn', 'deleteBtn', 'usersBtn', 'customerBillBtn', 'valuationBtn'].forEach((id) => {
     document.getElementById(id).style.display = isAdmin ? '' : 'none';
   });
 
@@ -990,6 +991,14 @@ function initInvoiceModal() {
   });
 
   document.getElementById('invDiscount').addEventListener('input', recalcInvoiceTotals);
+  document.querySelectorAll('input[name="invCustomerType"]').forEach((radio) => {
+    radio.addEventListener('change', () => {
+      // Switching to New Customer clears the automatic 10% so it can be typed manually.
+      if (radio.value === 'new') document.getElementById('invDiscount').value = 0;
+      applyCustomerTypeDiscount();
+      recalcInvoiceTotals();
+    });
+  });
   document.getElementById('invAdvance').addEventListener('input', recalcInvoiceTotals);
 
   const search = document.getElementById('invStockSearch');
@@ -1070,6 +1079,8 @@ function resetInvoiceForm() {
   document.getElementById('invDate').value = new Date().toISOString().slice(0, 10);
   document.getElementById('invDiscount').value = 0;
   document.getElementById('invAdvance').value = 0;
+  document.querySelector('input[name="invCustomerType"][value="new"]').checked = true;
+  document.querySelectorAll('input[name="invCustomerType"]').forEach((r) => { r.disabled = false; });
   document.getElementById('invStockSearch').value = '';
   document.getElementById('invStockResults').innerHTML = '';
   document.getElementById('invoiceFormError').textContent = '';
@@ -1090,6 +1101,7 @@ function resetInvoiceForm() {
 
   appendFixedInvoiceItems();
 
+  applyCustomerTypeDiscount();
   renderInvoiceItems();
   recalcInvoiceTotals();
   checkInvoiceUnlock();
@@ -1148,13 +1160,24 @@ function renderInvoiceItems() {
             `<option value="${y}"${y === years ? ' selected' : ''}>${warrantyText(y)}</option>`
           ).join('') +
         `</select>`;
+    // Saved invoices show plain text (wraps long names, and renders cleanly
+    // in the downloaded JPEG - inputs get clipped by html2canvas on phones).
+    const descCell = invoiceSaved
+      ? `<span class="inv-cell-text inv-desc-text">${escapeHtml(it.item_name)}</span>`
+      : `<input type="text" data-field="item_name" value="${escapeHtml(it.item_name)}" placeholder="Item description" ${nameLock}>`;
+    const qtyCell = invoiceSaved
+      ? `<span class="inv-cell-text">${escapeHtml(String(it.quantity))}</span>`
+      : `<input type="number" min="1" data-field="quantity" value="${it.quantity}" ${lock}>`;
+    const unitCell = invoiceSaved
+      ? `<span class="inv-cell-text">${formatRs(it.unit_price).replace('Rs ', '')}</span>`
+      : `<input type="number" min="0" step="0.01" data-field="unit_price" value="${it.unit_price}" ${lock}>`;
     return `
     <tr data-row-id="${it.rowId}">
       <td class="c-no">${idx + 1}</td>
-      <td class="c-desc"><input type="text" data-field="item_name" value="${escapeHtml(it.item_name)}" placeholder="Item description" ${nameLock}></td>
+      <td class="c-desc">${descCell}</td>
       <td class="c-war">${warrantyCell}</td>
-      <td class="c-qty"><input type="number" min="1" data-field="quantity" value="${it.quantity}" ${lock}></td>
-      <td class="c-unit"><input type="number" min="0" step="0.01" data-field="unit_price" value="${it.unit_price}" ${lock}></td>
+      <td class="c-qty">${qtyCell}</td>
+      <td class="c-unit">${unitCell}</td>
       <td class="c-tot invoice-row-total">${formatRs((Number(it.quantity) || 0) * (Number(it.unit_price) || 0))}</td>
       <td class="c-rm no-print">${invoiceSaved || it.fixed ? '' : '<button type="button" class="invoice-row-remove" title="Remove">✕</button>'}</td>
     </tr>
@@ -1162,8 +1185,25 @@ function renderInvoiceItems() {
   }).join('');
 }
 
+const REGULAR_CUSTOMER_DISCOUNT_RATE = 0.10;
+
+function isRegularCustomer() {
+  const checked = document.querySelector('input[name="invCustomerType"]:checked');
+  return !!checked && checked.value === 'regular';
+}
+
+// Regular Customer: discount box is locked to 10% of the subtotal.
+// New Customer: discount box is free for manual entry.
+function applyCustomerTypeDiscount() {
+  if (invoiceSaved) return;
+  document.getElementById('invDiscount').readOnly = isRegularCustomer();
+}
+
 function recalcInvoiceTotals() {
   const subtotal = invoiceItems.reduce((sum, it) => sum + (Number(it.quantity) || 0) * (Number(it.unit_price) || 0), 0);
+  if (!invoiceSaved && isRegularCustomer()) {
+    document.getElementById('invDiscount').value = Math.round(subtotal * REGULAR_CUSTOMER_DISCOUNT_RATE * 100) / 100;
+  }
   const discount = Number(document.getElementById('invDiscount').value) || 0;
   const advance = Number(document.getElementById('invAdvance').value) || 0;
   const finalAmount = Math.max(subtotal - discount, 0);
@@ -1277,6 +1317,7 @@ function enterInvoiceSavedMode(invoice) {
     'invProjectLocation', 'invInstallType', 'invPaymentMode', 'invDate',
     'invDiscount', 'invAdvance', 'invStockSearch', 'invAddBlankBtn'
   ].forEach((id) => { document.getElementById(id).disabled = true; });
+  document.querySelectorAll('input[name="invCustomerType"]').forEach((r) => { r.disabled = true; });
 
   document.getElementById('invoiceLockNotice').style.display = 'none';
   document.getElementById('invClearBtn').style.display = 'none';
@@ -1288,6 +1329,52 @@ function enterInvoiceSavedMode(invoice) {
   renderInvoiceItems();
 }
 
+// html2canvas draws <input>/<select> as a single clipped line, which on
+// phones cuts letters in half. Before capturing, every field in the cloned
+// invoice is swapped for a plain text box styled like the original field.
+function tagInvoiceFieldsForCapture(doc) {
+  doc.querySelectorAll('input, select, textarea').forEach((el, i) => { el.dataset.capIdx = i; });
+}
+
+function fieldDisplayText(el) {
+  if (el.tagName === 'SELECT') return el.options[el.selectedIndex] ? el.options[el.selectedIndex].text : '';
+  if (el.type === 'date') return el.value ? formatBillDate(el.value) : '';
+  if (el.type === 'number' && el.step === '0.01' && el.value !== '') return formatRs(el.value).replace('Rs ', '');
+  if (el.id === 'invDiscount' || el.id === 'invAdvance') return formatRs(el.value).replace('Rs ', '');
+  return el.value;
+}
+
+function replaceFieldsWithText(clonedDoc, originalDoc) {
+  const copyProps = [
+    'font-size', 'font-weight', 'font-family', 'letter-spacing', 'color', 'text-align',
+    'padding-top', 'padding-right', 'padding-bottom', 'padding-left',
+    'border-top-width', 'border-right-width', 'border-bottom-width', 'border-left-width',
+    'border-style', 'border-color', 'border-radius', 'background-color'
+  ];
+  originalDoc.querySelectorAll('[data-cap-idx]').forEach((orig) => {
+    const clone = clonedDoc.querySelector(`[data-cap-idx="${orig.dataset.capIdx}"]`);
+    if (!clone || orig.type === 'hidden') return;
+    const cs = window.getComputedStyle(orig);
+    const box = clonedDoc.createElement('div');
+    copyProps.forEach((p) => box.style.setProperty(p, cs.getPropertyValue(p)));
+    box.style.boxSizing = 'border-box';
+    box.style.width = orig.offsetWidth + 'px';
+    box.style.minHeight = orig.offsetHeight + 'px';
+    box.style.flex = cs.getPropertyValue('flex');
+    box.style.minWidth = '0';
+    box.style.lineHeight = '1.35';
+    // Names/addresses wrap onto more lines; numbers and dates stay on one line.
+    const wraps = orig.type === 'text' || orig.tagName === 'TEXTAREA';
+    box.style.whiteSpace = wraps ? 'normal' : 'nowrap';
+    if (wraps) box.style.overflowWrap = 'anywhere';
+    box.style.display = 'flex';
+    box.style.alignItems = 'center';
+    box.style.justifyContent = { center: 'center', right: 'flex-end', end: 'flex-end' }[cs.textAlign] || 'flex-start';
+    box.textContent = fieldDisplayText(orig);
+    clone.replaceWith(box);
+  });
+}
+
 async function downloadInvoiceImage() {
   const btn = document.getElementById('invDownloadBtn');
   const originalText = btn.textContent;
@@ -1296,6 +1383,7 @@ async function downloadInvoiceImage() {
 
   try {
     const doc = document.getElementById('invoiceDoc');
+    tagInvoiceFieldsForCapture(doc);
     const canvas = await html2canvas(doc, {
       scale: 2,
       backgroundColor: '#ffffff',
@@ -1305,7 +1393,8 @@ async function downloadInvoiceImage() {
       windowWidth: Math.max(doc.offsetWidth + 48, document.documentElement.clientWidth),
       scrollX: 0,
       scrollY: -window.scrollY,
-      ignoreElements: (el) => el.classList && el.classList.contains('no-print')
+      ignoreElements: (el) => el.classList && el.classList.contains('no-print'),
+      onclone: (clonedDoc) => replaceFieldsWithText(clonedDoc, doc)
     });
     const link = document.createElement('a');
     link.download = `Invoice-INV-${String(currentInvoiceId).padStart(6, '0')}.jpg`;
@@ -1319,7 +1408,7 @@ async function downloadInvoiceImage() {
   }
 }
 
-// ================= INVOICE HISTORY MODAL (Admin only) =================
+// ================= INVOICE HISTORY MODAL =================
 
 function initInvoiceHistoryModal() {
   const overlay = document.getElementById('invoiceHistoryModal');
@@ -1411,6 +1500,8 @@ async function openInvoiceForViewing(id) {
     renderInvoiceItems();
     recalcInvoiceTotals();
     enterInvoiceSavedMode(invoice);
+    // Customer type isn't stored with the invoice, so don't show a guess.
+    document.querySelectorAll('input[name="invCustomerType"]').forEach((r) => { r.checked = false; });
 
     document.getElementById('invoiceHistoryModal').classList.remove('open');
     document.getElementById('invoiceModal').classList.add('open');

@@ -2,26 +2,28 @@ const express = require("express");
 const router = express.Router();
 const db = require("../dbFunctions");
 const requireAuth = require("../middleware/requireAuth");
-const requireAdmin = require("../middleware/requireAdmin");
 
 // Open to any logged-in user (Admin or staff) - unlike Customer Bill /
-// Users, invoice creation isn't gated by requireAdmin.
+// Users, invoice creation isn't gated by requireAdmin. Invoice History is
+// open to everyone too, but staff never see invoices made by an Admin.
 
-// GET /api/invoices?q=keyword - Invoice History (Admin only).
-router.get("/", requireAdmin, async (req, res) => {
+const isAdmin = (req) => (req.user.role || "").trim().toLowerCase() === "admin";
+
+// GET /api/invoices?q=keyword - Invoice History.
+router.get("/", requireAuth, async (req, res) => {
   try {
     const q = (req.query.q || "").trim();
-    res.json(await db.getAllInvoices(q));
+    res.json(await db.getAllInvoices(q, isAdmin(req)));
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Something went wrong. Please try again." });
   }
 });
 
-// GET /api/invoices/:id - Invoice History detail view (Admin only).
-router.get("/:id", requireAdmin, async (req, res) => {
+// GET /api/invoices/:id - Invoice History detail view.
+router.get("/:id", requireAuth, async (req, res) => {
   try {
-    const invoice = await db.getInvoiceById(req.params.id);
+    const invoice = await db.getInvoiceById(req.params.id, isAdmin(req));
     if (!invoice) return res.status(404).json({ error: "Invoice not found." });
     res.json(invoice);
   } catch (err) {

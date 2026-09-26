@@ -1651,3 +1651,51 @@ button {
 /* Required comment box (Stock IN/OUT, Add Product) */
 .required-mark { color: #dc2626; }
 .modal textarea { resize: vertical; font-family: inherit; }
+
+/* Invoice: Regular / New customer choice (above the sheet, never printed) */
+.inv-customer-type {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 20px;
+  align-items: center;
+  max-width: 794px;
+  box-sizing: border-box;
+  margin: 0 auto 8px;
+  padding: 10px 110px 10px 14px; /* right space for the Close button */
+  background: #fff;
+  color: #111;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.inv-customer-type label { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+.inv-customer-type small { font-weight: 400; color: #555; }
+#invDiscount[readonly] { background: #eef6ee; }
+
+/* Saved invoice line items: plain text that wraps instead of clipped inputs. */
+.inv-items-table .inv-cell-text {
+  display: block;
+  padding: 7px 6px;
+  line-height: 1.35;
+  font-size: 12px;
+  color: #14203a;
+}
+.inv-items-table .inv-desc-text {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.inv-items-table .c-qty .inv-cell-text {
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+}
+.inv-items-table .c-unit .inv-cell-text {
+  text-align: right;
+}
+
+/* iOS/Android fade disabled inputs (grey + ~40% opacity); keep invoice text solid. */
+.invoice-doc input:disabled,
+.invoice-doc select:disabled {
+  -webkit-text-fill-color: #14203a;
+  opacity: 1;
+}

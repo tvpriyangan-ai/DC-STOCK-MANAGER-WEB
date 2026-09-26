@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>DC Stock Manager</title>
 <link rel="icon" type="image/jpeg" href="images/logo_v2.jpeg">
-<link rel="stylesheet" href="css/style.css?v=12">
+<link rel="stylesheet" href="css/style.css?v=15">
 </head>
 <body class="app-body">
 
@@ -475,6 +475,13 @@
     <div class="modal invoice-modal">
       <button type="button" class="btn btn-red btn-sm invoice-close-btn no-print" id="invoiceCloseBtn">❌ Close</button>
 
+      <!-- Customer type: Regular gets an automatic 10% discount. Kept outside
+           #invoiceDoc so it never appears on the printed / downloaded invoice. -->
+      <div class="inv-customer-type no-print">
+        <label><input type="radio" name="invCustomerType" value="regular"> ⭐ Regular Customer <small>(10% discount)</small></label>
+        <label><input type="radio" name="invCustomerType" value="new" checked> 🆕 New Customer</label>
+      </div>
+
       <div class="invoice-doc" id="invoiceDoc">
 
         <!-- ===== HEADER ===== -->
@@ -638,7 +645,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-  <script src="js/api.js?v=12"></script>
-  <script src="js/dashboard.js?v=12"></script>
+  <script src="js/api.js?v=15"></script>
+  <script src="js/dashboard.js?v=15"></script>
 </body>
 </html>

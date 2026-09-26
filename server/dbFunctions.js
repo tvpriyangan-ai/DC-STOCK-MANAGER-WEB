@@ -6,6 +6,9 @@
 const bcrypt = require("bcryptjs");
 const pool = require("./db");
 
+// Usernames of Admin accounts - used to hide Admin-made invoices from staff.
+const ADMIN_USERNAMES_SQL = `SELECT username FROM users WHERE LOWER(TRIM(role)) = 'admin'`;
+
 const DatabaseFunctions = {
   // ==========================
   // PRODUCTS
@@ -203,7 +206,8 @@ const DatabaseFunctions = {
   // ==========================
 
   // type: "used" (Stock OUT), "in" (Stock IN), "invoice", "product" (add/update/delete)
-  async getRecentActivities(limit = 400, keyword = "", type = "") {
+  // hideAdminInvoices: staff don't see "Created Invoice" lines logged by Admins.
+  async getRecentActivities(limit = 400, keyword = "", type = "", hideAdminInvoices = false) {
     let sql = `
       SELECT created_at, username, activity
       FROM activity_log
@@ -224,6 +228,9 @@ const DatabaseFunctions = {
     if (typePatterns[type]) {
       where.push(`(${typePatterns[type].map(() => "activity LIKE ?").join(" OR ")})`);
       params.push(...typePatterns[type]);
+    }
+    if (hideAdminInvoices) {
+      where.push(`NOT (activity LIKE 'Created Invoice%' AND username IN (${ADMIN_USERNAMES_SQL}))`);
     }
     if (where.length) sql += ` WHERE ${where.join(" AND ")} `;
     sql += ` ORDER BY id DESC LIMIT ?`;
@@ -306,27 +313,33 @@ const DatabaseFunctions = {
   // INVOICES
   // ==========================
 
-  // Powers the "Invoice History" button (Admin only) - lists saved
-  // invoice headers, optionally filtered by customer name/mobile.
-  async getAllInvoices(keyword) {
+  // Powers the "Invoice History" button - lists saved invoice headers,
+  // optionally filtered by customer name/mobile. Admin sees every invoice;
+  // staff (includeAdminInvoices=false) only see invoices made by non-admins.
+  async getAllInvoices(keyword, includeAdminInvoices = true) {
     let sql = `
       SELECT id, customer_name, customer_mobile, invoice_date, final_amount,
              balance_due, created_by, created_at
       FROM invoices
     `;
+    const where = [];
     const params = [];
     if (keyword) {
       const like = `%${keyword}%`;
-      sql += ` WHERE customer_name LIKE ? OR customer_mobile LIKE ? `;
+      where.push(`(customer_name LIKE ? OR customer_mobile LIKE ?)`);
       params.push(like, like);
     }
+    if (!includeAdminInvoices) where.push(`created_by NOT IN (${ADMIN_USERNAMES_SQL})`);
+    if (where.length) sql += ` WHERE ${where.join(" AND ")} `;
     sql += ` ORDER BY id DESC LIMIT 500`;
     const [rows] = await pool.query(sql, params);
     return rows;
   },
 
-  async getInvoiceById(id) {
-    const [headerRows] = await pool.query(`SELECT * FROM invoices WHERE id=?`, [id]);
+  async getInvoiceById(id, includeAdminInvoices = true) {
+    let sql = `SELECT * FROM invoices WHERE id=?`;
+    if (!includeAdminInvoices) sql += ` AND created_by NOT IN (${ADMIN_USERNAMES_SQL})`;
+    const [headerRows] = await pool.query(sql, [id]);
     const header = headerRows[0];
     if (!header) return null;
     const [items] = await pool.query(
